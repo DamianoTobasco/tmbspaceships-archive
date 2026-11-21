@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TMBSPACESHIPS Archive</title>
+<meta name="description" content="Search and browse 1,641 public posts by @TMBSPACESHIPS — plasma physics, field propulsion, antigravity and fusion — with a timeline, media gallery and stats.">
+<link rel="canonical" href="https://damianotobasco.github.io/tmbspaceships-archive/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TMBSPACESHIPS Archive">
+<meta property="og:title" content="TMBSPACESHIPS Archive">
+<meta property="og:description" content="Search and browse 1,641 public posts by @TMBSPACESHIPS — plasma physics, field propulsion, antigravity and fusion — with a timeline, media gallery and stats.">
+<meta property="og:url" content="https://damianotobasco.github.io/tmbspaceships-archive/">
+<meta property="og:image" content="https://damianotobasco.github.io/tmbspaceships-archive/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="TMBSPACESHIPS Archive: an animated plasma drive above a searchable post archive">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TMBSPACESHIPS Archive">
+<meta name="twitter:description" content="Search and browse 1,641 public posts by @TMBSPACESHIPS — plasma physics, field propulsion, antigravity and fusion — with a timeline, media gallery and stats.">
+<meta name="twitter:image" content="https://damianotobasco.github.io/tmbspaceships-archive/og.png">
+
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Michroma&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303040a'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%2359f3ff' stroke-width='3'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%23a58bff' stroke-width='3' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%23ff5fae' stroke-width='3' transform='rotate(120 32 32)'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css?v=bae44afd6d">
+</head>
+<body>
+<a class="skip" href="#results">Skip to results</a>
+
+<header class="hero" id="hero">
+  <canvas id="reactor" aria-hidden="true"></canvas>
+  <div class="hero-bar">
+    <a class="brand" href="#" data-act="home" aria-label="Archive home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <ellipse cx="32" cy="32" rx="26" ry="9.5" fill="none" stroke="var(--ion)" stroke-width="2.2"/>
+        <ellipse cx="32" cy="32" rx="26" ry="9.5" fill="none" stroke="var(--ele)" stroke-width="2.2" transform="rotate(60 32 32)"/>
+        <ellipse cx="32" cy="32" rx="26" ry="9.5" fill="none" stroke="var(--alp)" stroke-width="2.2" transform="rotate(120 32 32)"/>
+        <circle cx="32" cy="32" r="4.5" fill="#fff"/>
+      </svg>
+      <span class="brand-txt"><b>TMB</b>/ARCHIVE</span>
+    </a>
+    <dl class="readouts" id="readouts"></dl>
+  </div>
+
+  <div class="hero-title">
+    <p class="eyebrow"><span class="blink">●</span> Archive of public posts by @TMBSPACESHIPS · Electric Propulsive Spacecraft Systems</p>
+    <h1><span class="h1a">TMB</span><span class="h1b">SPACESHIPS</span></h1>
+  </div>
+
+  <div class="stage" id="stage" aria-hidden="true"></div>
+
+  <div class="hero-foot">
+    <div class="reaction" aria-hidden="true">
+      <span class="rx">p</span><span class="op">+</span><span class="rx b"><sup>11</sup>B</span><span class="op">→</span><span class="rx a">3 <sup>4</sup>He</span><span class="op">+</span><span class="rx e">8.7 MeV</span>
+      <span class="rx-sep"></span>
+      <span class="rx-k">α events</span><span class="rx-v" id="alphaCount">0000</span>
+    </div>
+    <div class="hints" id="hints" aria-label="Example searches"></div>
+  </div>
+</header>
+
+<div class="console-wrap" id="consoleWrap">
+  <div class="console">
+    <label for="q" class="console-k">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12c2.5-6 5-6 7.5 0s5 6 7.5 0 3.5-3 5-1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Field query</span>
+    </label>
+    <input id="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search" placeholder="Search posts…">
+    <span class="console-stat" id="stat" aria-live="polite"></span>
+    <kbd class="kbd-slash" aria-hidden="true">/</kbd>
+    <button class="icon-btn" id="helpBtn" type="button" aria-label="Search syntax and keyboard shortcuts" title="Search syntax & shortcuts (?)">?</button>
+  </div>
+</div>
+
+<section class="spectrum-wrap" aria-label="Posts per month">
+  <div class="panel spectrum" id="spectrum">
+    <div class="panel-head">
+      <h2><span class="ph-k">Emission spectrum</span> <span class="ph-sub">posts per month · drag to select a window</span></h2>
+      <div class="spectrum-read" id="spectrumRead"></div>
+    </div>
+    <div class="spectrum-plot" id="spectrumPlot"></div>
+  </div>
+</section>
+
+<main class="deck" id="results">
+  <aside class="side" id="side" aria-label="Filters">
+    <div class="side-group">
+      <h3>Particle species <small>post type</small></h3>
+      <div class="chips" id="fType"></div>
+    </div>
+    <div class="side-group">
+      <h3>Field lines <small>topic</small></h3>
+      <div class="chips" id="fTopic"></div>
+    </div>
+    <div class="side-group">
+      <h3>Payload</h3>
+      <div class="chips" id="fHas"></div>
+    </div>
+    <div class="side-group">
+      <h3>Most addressed <small>replies to</small></h3>
+      <div class="chips handles" id="fHandles"></div>
+    </div>
+    <button class="reset" id="resetBtn" type="button">Reset all filters</button>
+    <p class="side-note">Searches run entirely in your browser. Matches are prefix-based, so <code>electron</code> finds <i>electrons</i>.</p>
+  </aside>
+
+  <section class="results">
+    <div class="toolbar">
+      <div class="tabs" role="tablist" aria-label="View">
+        <button role="tab" data-view="stream" aria-selected="true"><span class="tab-n">1</span>Stream</button>
+        <button role="tab" data-view="grid" aria-selected="false"><span class="tab-n">2</span>Spectrograph</button>
+        <button role="tab" data-view="telemetry" aria-selected="false"><span class="tab-n">3</span>Telemetry</button>
+      </div>
+      <div class="tool-right">
+        <button class="tool-btn filters-toggle" id="filtersToggle" type="button" aria-controls="side" aria-expanded="false">Filters</button>
+        <label class="sort"><span>Sort</span>
+          <select id="sort">
+            <option value="auto">Relevance / newest</option>
+            <option value="new">Newest first</option>
+            <option value="old">Oldest first</option>
+            <option value="views">Most viewed</option>
+            <option value="likes">Most liked</option>
+            <option value="bookmarks">Most bookmarked</option>
+            <option value="replies">Most replied</option>
+            <option value="long">Longest</option>
+          </select>
+        </label>
+        <button class="tool-btn" id="randomBtn" type="button" title="Open a random post from these results (R)">⚛ Random</button>
+      </div>
+    </div>
+    <div class="pills" id="pills"></div>
+    <div id="view-stream" class="stream" role="feed" aria-busy="false"><p class="loadline">Loading the archive…</p></div>
+    <div id="view-grid" class="mgrid" hidden></div>
+    <div id="view-telemetry" class="telemetry" hidden></div>
+    <div id="sentinel" class="sentinel" aria-hidden="true"></div>
+    <div id="empty" class="empty" hidden>
+      <div class="empty-orb" aria-hidden="true"></div>
+      <h3>No signal</h3>
+      <p>Nothing in the archive matches this query. Loosen a filter or try a shorter word.</p>
+      <button class="tool-btn" type="button" data-act="reset">Reset everything</button>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <p>An archive of public posts by <b>@TMBSPACESHIPS</b> · <span id="footCount"></span>, collected through the public X API. Every post links to its original on X.</p>
+    <p class="foot-k">Keys: <kbd>/</kbd> search · <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>Enter</kbd> open · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> views · <kbd>R</kbd> random · <kbd>?</kbd> help</p>
+  </div>
+</footer>
+
+<dialog class="inspect" id="inspect" aria-labelledby="inspTitle">
+  <div class="insp-head">
+    <div class="insp-id" id="inspTitle"></div>
+    <div class="insp-nav">
+      <button class="icon-btn" type="button" data-act="prev" aria-label="Previous post (←)">←</button>
+      <button class="icon-btn" type="button" data-act="next" aria-label="Next post (→)">→</button>
+      <button class="icon-btn" type="button" data-act="close" aria-label="Close (Esc)">✕</button>
+    </div>
+  </div>
+  <div class="insp-tabs" role="tablist" id="inspTabs"></div>
+  <div class="insp-body" id="inspBody"></div>
+</dialog>
+
+<dialog class="lightbox" id="lightbox" aria-label="Media viewer">
+  <div class="lb-stage" id="lbStage"></div>
+  <div class="lb-bar">
+    <div class="lb-cap" id="lbCap"></div>
+    <div class="lb-nav">
+      <button class="icon-btn" type="button" data-act="lb-prev" aria-label="Previous image">←</button>
+      <span class="lb-count" id="lbCount"></span>
+      <button class="icon-btn" type="button" data-act="lb-next" aria-label="Next image">→</button>
+      <a class="icon-btn" id="lbOpen" target="_blank" rel="noopener" aria-label="Open original file" title="Open original file">⤢</a>
+      <button class="icon-btn" type="button" data-act="lb-close" aria-label="Close">✕</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="help" id="help" aria-labelledby="helpTitle">
+  <div class="insp-head">
+    <div class="insp-id" id="helpTitle"><span class="ph-k">Query syntax</span></div>
+    <div class="insp-nav"><button class="icon-btn" type="button" data-act="help-close" aria-label="Close">✕</button></div>
+  </div>
+  <div class="help-body">
+    <table class="syntax">
+      <tbody>
+        <tr><td><code>plasma vacuum</code></td><td>Both words (any order). Words match as prefixes.</td></tr>
+        <tr><td><code>"hydrogen lattice"</code></td><td>Exact phrase.</td></tr>
+        <tr><td><code>fusion OR muon</code></td><td>Either term.</td></tr>
+        <tr><td><code>-alien</code></td><td>Exclude a word or phrase.</td></tr>
+        <tr><td><code>@ChiefDinger</code></td><td>Replies to, reposts of, or mentions of an account.</td></tr>
+        <tr><td><code>type:original</code></td><td><code>original</code>, <code>reply</code>, <code>repost</code>, <code>quote</code>.</td></tr>
+        <tr><td><code>has:media</code></td><td><code>media</code>, <code>image</code>, <code>video</code>, <code>link</code>, <code>thread</code>, <code>star</code>.</td></tr>
+        <tr><td><code>topic:waves</code></td><td>Field line (topic) by name.</td></tr>
+        <tr><td><code>year:2024</code></td><td>Calendar year (US Eastern time).</td></tr>
+        <tr><td><code>after:2024-12 before:2025-04</code></td><td>Date window. Accepts <code>YYYY</code>, <code>YYYY-MM</code>, <code>YYYY-MM-DD</code>.</td></tr>
+        <tr><td><code>views:&gt;20k</code></td><td>Also <code>likes:</code> <code>reposts:</code> <code>replies:</code> <code>bookmarks:</code> with <code>&gt; &gt;= &lt; &lt;=</code>.</td></tr>
+        <tr><td><code>shot:1641</code></td><td>Jump to a post by its archive number (1 = oldest).</td></tr>
+      </tbody>
+    </table>
+    <h4>Keyboard</h4>
+    <ul class="keys">
+      <li><kbd>/</kbd> focus search</li>
+      <li><kbd>Esc</kbd> clear / close</li>
+      <li><kbd>j</kbd> <kbd>k</kbd> next / previous card</li>
+      <li><kbd>Enter</kbd> inspect focused card</li>
+      <li><kbd>←</kbd> <kbd>→</kbd> previous / next while inspecting</li>
+      <li><kbd>s</kbd> star the focused post</li>
+      <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> stream, spectrograph, telemetry</li>
+      <li><kbd>R</kbd> random post</li>
+    </ul>
+  </div>
+</dialog>
+
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data/posts.js?v=874532d38c"></script>
+<script src="assets/reactor.js?v=850a24b6a8"></script>
+<script src="assets/app.js?v=8d52a3c783"></script>
+</body>
+</html>
