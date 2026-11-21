@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Michroma&family=Architects+Daughter&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303040a'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%2359f3ff' stroke-width='3'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%23a58bff' stroke-width='3' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%23ff5fae' stroke-width='3' transform='rotate(120 32 32)'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23fff'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/style.css?v=a1ec33cd8d">
+<link rel="stylesheet" href="assets/style.css?v=3e9e1aef77">
 </head>
 <body>
 <a class="skip" href="#results">Skip to results</a>
@@ -46,6 +46,10 @@
       </svg>
       <span class="brand-txt"><b>TMB</b>/ARCHIVE</span>
     </a>
+    <nav class="modules" aria-label="Archive sections">
+      <a class="mod mod-tmb" href="index.html" aria-current="page"><span class="mod-dot" aria-hidden="true"></span>TMB Spaceships</a>
+      <a class="mod mod-pais" href="pais.html"><span class="mod-dot" aria-hidden="true"></span>Pais Patents</a>
+    </nav>
     <dl class="readouts" id="readouts"></dl>
   </div>
 
@@ -157,7 +161,6 @@
         <button role="tab" data-view="stream" aria-selected="true"><span class="tab-n">1</span>Stream</button>
         <button role="tab" data-view="grid" aria-selected="false"><span class="tab-n">2</span>Spectrograph</button>
         <button role="tab" data-view="telemetry" aria-selected="false"><span class="tab-n">3</span>Telemetry</button>
-        <button role="tab" data-view="patents" aria-selected="false"><span class="tab-n">4</span>Pais Patents</button>
       </div>
       <div class="tool-right">
         <button class="tool-btn filters-toggle" id="filtersToggle" type="button" aria-controls="side" aria-expanded="false">Filters</button>
@@ -180,7 +183,6 @@
     <div id="view-stream" class="stream" role="feed" aria-busy="false"><p class="loadline">Loading the archive…</p></div>
     <div id="view-grid" class="mgrid" hidden></div>
     <div id="view-telemetry" class="telemetry" hidden></div>
-    <div id="view-patents" class="patents" hidden></div>
     <div id="sentinel" class="sentinel" aria-hidden="true"></div>
     <div id="empty" class="empty" hidden>
       <div class="empty-orb" aria-hidden="true"></div>
@@ -194,7 +196,7 @@
 <footer class="foot">
   <div class="foot-in">
     <p>An archive of public posts by <b>@TMBSPACESHIPS</b> · <span id="footCount"></span>, collected through the public X API. Every post links to its original on X.</p>
-    <p class="foot-k">Keys: <kbd>/</kbd> search · <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>Enter</kbd> open · <kbd>1</kbd>–<kbd>4</kbd> views · <kbd>R</kbd> random · <kbd>?</kbd> help</p>
+    <p class="foot-k">Keys: <kbd>/</kbd> search · <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>Enter</kbd> open · <kbd>1</kbd>–<kbd>3</kbd> views · <kbd>R</kbd> random · <kbd>?</kbd> help</p>
   </div>
 </footer>
 
@@ -255,7 +257,7 @@
       <li><kbd>Enter</kbd> inspect focused card</li>
       <li><kbd>←</kbd> <kbd>→</kbd> previous / next while inspecting</li>
       <li><kbd>s</kbd> star the focused post</li>
-      <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> stream, spectrograph, telemetry, Pais patents</li>
+      <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> stream, spectrograph, telemetry</li>
       <li><kbd>R</kbd> random post</li>
     </ul>
   </div>
@@ -267,7 +269,6 @@
 <script src="data/posts.js?v=9a1ca2f078"></script>
 <script src="assets/reactor.js?v=b6d1e67577"></script>
 <script src="assets/sheets.js?v=aed4175f90"></script>
-<script src="assets/patents.js?v=8e5234bebc"></script>
-<script src="assets/app.js?v=2fdd9923e1"></script>
+<script src="assets/app.js?v=b2fcd4b905"></script>
 </body>
 </html>

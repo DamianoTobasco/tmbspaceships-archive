@@ -7,8 +7,8 @@
  *   fusion  US 2019/0295733 A1 Plasma compression fusion device
  *   hfgw    US 10,322,827 B2   High frequency gravitational wave generator
  *
- * window.PaisPatents.render(el) builds the view once; each diagram animates only while it is on
- * screen. Diagrams are illustrations of the text, not copies of the patent figures.
+ * This file is the drawing engine and the record; pais.js builds the Pais Patents page from
+ * window.PaisViz. Diagrams are illustrations of the text, not copies of the patent figures.
  * Uses window.TMBFX (reactor.js) for the reduced-motion flag when it is present.
  */
 (function () {
@@ -610,141 +610,10 @@
   // posts in this archive where @TMBSPACESHIPS answers someone talking about Pais
   var TMB_POSTS = ['1904936983530791239', '1873414378474934610', '1869044276686115298', '1905589226952933762', '1864136372056895836', '1912618190691029106', '1938602701190725972'];
 
-  /* ════════════ view ════════════ */
-  var built = false, vizzes = [], running = false, raf = 0, last = 0, io = null;
-  function excerpt(s, n) { s = (s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
-
-  function tmbHTML() {
-    var D = window.TMB, by = {};
-    if (!D || !D.posts) return '';
-    D.posts.forEach(function (p) { by[p.id] = p; });
-    var rows = TMB_POSTS.map(function (id) { return by[id]; }).filter(Boolean);
-    if (!rows.length) return '';
-    return '<section class="panel pp-tmb"><div class="panel-head"><h2><span class="ph-k">@TMBSPACESHIPS on Pais</span><span class="ph-sub">' + rows.length + ' replies in this archive</span></h2></div><ol>' +
-      rows.map(function (p) {
-        var r = p.ref || {}, d = p.t.slice(0, 10);
-        return '<li><button type="button" data-act="open" data-id="' + p.id + '">' +
-          '<span class="pp-tmb-d">SHOT ' + String(p.n).padStart(4, '0') + '<br>' + d + '</span>' +
-          '<span class="pp-tmb-x">' + (r.x ? '<span class="pp-tmb-ctx">' + (r.u ? '@' + esc(r.u) + ': ' : '') + esc(excerpt(r.x.replace(/^((?:@\w+[\s,]*)+)/, ''), 150)) + '</span>' : '') +
-          '<span class="pp-tmb-reply">↳ ' + esc(excerpt(p.x, 260)) + '</span></span></button></li>';
-      }).join('') + '</ol></section>';
-  }
-
-  function cardHTML(P, i) {
-    return '<article class="pp-card" id="pais-' + P.key + '" style="--i:' + i + '">' +
-      '<div class="pp-viz"><canvas data-viz="' + i + '" role="img" aria-label="Animated cross-section of the ' + esc(P.title.toLowerCase()) + ', drawn from the patent text"></canvas></div>' +
-      '<div class="pp-body">' +
-        '<header class="pp-head">' +
-          '<span class="pp-n">0' + (i + 1) + '</span>' +
-          '<div><h3>' + esc(P.title) + '</h3>' +
-          '<p class="pp-no"><a href="' + GP + P.gp + '/en" target="_blank" rel="noopener">' + esc(P.no) + ' ↗</a><span class="pp-status ' + P.status + '">' + esc(P.statusText) + '</span></p></div>' +
-        '</header>' +
-        '<div class="pp-cols">' +
-          '<div class="pp-text"><p>' + esc(P.plain) + '</p>' +
-            '<blockquote class="pp-quote">“' + esc(P.claim) + '”<cite>— from the patent</cite></blockquote>' +
-            '<p class="pp-note">' + esc(P.note) + '</p></div>' +
-          '<div class="pp-side">' +
-            '<dl class="pp-dates">' + P.dates.map(function (d) { return '<div><dt>' + d[0] + '</dt><dd>' + d[1] + '</dd></div>'; }).join('') + '</dl>' +
-            '<dl class="pp-nums">' + P.nums.map(function (d) { return '<div><dt>' + esc(d[0]) + '</dt><dd>' + esc(d[1]) + '</dd></div>'; }).join('') + '</dl>' +
-            '<p class="pp-by">Inventor: Salvatore Cezar Pais · Assignee: US Navy</p>' +
-          '</div>' +
-        '</div>' +
-      '</div></article>';
-  }
-
-  function build(el) {
-    var tl = TIMELINE.map(function (e, i) {
-      return '<li class="pp-tl-' + e[2] + '" style="--i:' + i + '"><span class="pp-tl-d">' + e[0] + '</span><span class="pp-tl-x">' + esc(e[1]) + '</span></li>';
-    }).join('');
-    el.innerHTML =
-      '<section class="pp-intro panel">' +
-        '<div class="pp-intro-txt">' +
-          '<p class="eyebrow"><span class="blink">●</span> The Navy “UFO patents”</p>' +
-          '<h2 class="pp-h">Salvatore Pais · 5 US Navy filings</h2>' +
-          '<p>Between 2015 and 2018 Salvatore Cezar Pais, an aerospace engineer at the Naval Air Warfare Center Aircraft Division in Patuxent River, Maryland, filed five patent applications through the US Navy: a craft that reduces its own inertial mass, the field generator behind it, a gravitational-wave generator, a room-temperature superconductor and a compact fusion reactor. Three were granted; two were abandoned. All three granted patents have since lapsed for unpaid fees.</p>' +
-          '<p class="pp-small">Each drawing below is an animated cross-section built from the parts and numbers the patent itself describes (reference numerals in the labels). They illustrate the claims; nothing here has been demonstrated.</p>' +
-          '<nav class="pp-jump" aria-label="Jump to a patent">' + PATENTS.map(function (P, i) {
-            return '<a href="#pais-' + P.key + '" data-pp-jump="' + P.key + '"><b>0' + (i + 1) + '</b>' + esc(P.viz.hand) + '</a>';
-          }).join('') + '</nav>' +
-        '</div>' +
-        '<ol class="pp-tl" aria-label="Timeline">' + tl + '</ol>' +
-      '</section>' +
-      PATENTS.map(cardHTML).join('') +
-      tmbHTML() +
-      '<p class="pp-src">Sources: the patents on Google Patents (linked above); US Navy test records released under FOIA in 2021 (HEEMFG test report, August 2019). Patent text is quoted from the filings.</p>';
-    vizzes = [];
-    Array.prototype.forEach.call(el.querySelectorAll('canvas[data-viz]'), function (cv) {
-      var v = { cv: cv, ctx: cv.getContext('2d'), d: PATENTS[+cv.getAttribute('data-viz')].viz, s: null, on: false, t: 2 + Math.random() * 3, key: '' };
-      vizzes.push(v);
-    });
-    el.addEventListener('click', function (e) {   // smooth jumps inside the view (the page's own hash is the view name)
-      var a = e.target.closest && e.target.closest('[data-pp-jump]');
-      if (!a) return;
-      e.preventDefault();
-      var card = document.getElementById('pais-' + a.getAttribute('data-pp-jump'));
-      if (card) card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    });
-    if ('IntersectionObserver' in window) {
-      io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          var v = vizzes.filter(function (x) { return x.cv === en.target; })[0];
-          if (v) { v.on = en.isIntersecting; if (v.on) { size(v); draw(v, 0); } }
-        });
-        loop();
-      }, { rootMargin: '120px 0px' });
-      vizzes.forEach(function (v) { io.observe(v.cv); });
-    } else vizzes.forEach(function (v) { v.on = true; });
-    window.addEventListener('resize', function () { vizzes.forEach(function (v) { v.key = ''; if (v.on) { size(v); draw(v, 0); } }); });
-    document.addEventListener('visibilitychange', loop);
-    if (document.fonts && document.fonts.load) {
-      Promise.all([document.fonts.load('14px "Architects Daughter"'), document.fonts.load('500 10px "JetBrains Mono"')])
-        .then(function () { vizzes.forEach(function (v) { if (v.on) draw(v, 0); }); }, function () {});
-    }
-  }
-
-  function size(v) {
-    var r = v.cv.getBoundingClientRect();
-    if (!r.width) return false;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2), key = Math.round(r.width) + 'x' + Math.round(r.height) + '@' + dpr;
-    if (key === v.key) return true;
-    v.key = key;
-    v.cv.width = Math.round(r.width * dpr); v.cv.height = Math.round(r.height * dpr);
-    v.s = { W: r.width, H: r.height, dpr: dpr, small: r.width < 600 };
-    v.d.layout(v.s);
-    return true;
-  }
-  function draw(v, dt) {
-    if (!v.s && !size(v)) return;
-    if (!v.s) return;
-    v.t += dt;
-    var c = v.ctx, s = v.s;
-    c.setTransform(s.dpr, 0, 0, s.dpr, 0, 0);
-    c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.setLineDash([]); c.lineCap = 'butt'; c.lineJoin = 'miter';
-    c.clearRect(0, 0, s.W, s.H);
-    paper(c, s, v.d);
-    c.save(); c.beginPath(); c.rect(6, 34, s.W - 12, s.H - 54); c.clip();
-    v.d.draw(c, s, reduce ? 2.4 : v.t);
-    c.restore();
-  }
-  function frame(now) {
-    raf = 0;
-    if (!running) return;
-    var dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
-    vizzes.forEach(function (v) { if (v.on) { size(v); draw(v, dt); } });
-    raf = requestAnimationFrame(frame);
-  }
-  function loop() {
-    var want = !reduce && !document.hidden && vizzes.some(function (v) { return v.on; });
-    if (want && !running) { running = true; last = 0; raf = requestAnimationFrame(frame); }
-    else if (!want && running) { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
-  }
-
-  window.PaisPatents = {
-    render: function (el) {
-      if (!el) return;
-      if (!built) { build(el); built = true; }
-      vizzes.forEach(function (v) { v.key = ''; });
-      requestAnimationFrame(function () { vizzes.forEach(function (v) { if (v.on || !io) { size(v); draw(v, 0); } }); loop(); });
-    }
+  /* ════════════ shared with pais.js (the Pais Patents page) ════════════ */
+  window.PaisViz = {
+    C: C, reduce: reduce, still: still, TAU: TAU,
+    rgba: rgba, clamp: clamp, text: text, mono: mono, hand: hand, esc: esc, paper: paper,
+    list: PATENTS, timeline: TIMELINE, tmbPosts: TMB_POSTS
   };
 })();

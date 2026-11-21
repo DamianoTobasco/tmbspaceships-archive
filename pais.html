@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pais Patents · TMB Archive</title>
+<meta name="description" content="The five US Navy patent filings by Salvatore Cezar Pais: animated machine diagrams, the full text of every patent, the original drawings and a backup of each PDF.">
+<link rel="canonical" href="https://damianotobasco.github.io/tmbspaceships-archive/pais.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TMBSPACESHIPS Archive">
+<meta property="og:title" content="Salvatore Pais · US Navy patents">
+<meta property="og:description" content="The five US Navy patent filings by Salvatore Cezar Pais: animated machine diagrams, the full text of every patent, the original drawings and a backup of each PDF.">
+<meta property="og:url" content="https://damianotobasco.github.io/tmbspaceships-archive/pais.html">
+<meta property="og:image" content="https://damianotobasco.github.io/tmbspaceships-archive/og-pais.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Pais Patents: an animated blueprint of the inertial mass reduction craft">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Salvatore Pais · US Navy patents">
+<meta name="twitter:description" content="The five US Navy patent filings by Salvatore Cezar Pais: animated machine diagrams, the full text of every patent, the original drawings and a backup of each PDF.">
+<meta name="twitter:image" content="https://damianotobasco.github.io/tmbspaceships-archive/og-pais.png">
+
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Michroma&family=Architects+Daughter&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303040a'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%23ffc65c' stroke-width='3'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%2359f3ff' stroke-width='3' transform='rotate(90 32 32)'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css?v=3e9e1aef77">
+</head>
+<body class="pais">
+<a class="skip" href="#overview">Skip to the patents</a>
+<div class="aura fx" aria-hidden="true"><i></i><i></i></div>
+<div class="beam fx" aria-hidden="true"><i id="beam"></i></div>
+<button class="totop fx" id="toTop" type="button" aria-label="Back to top"><span aria-hidden="true">↑</span></button>
+
+<header class="hero" id="hero" data-exhibit="craft">
+  <canvas id="paisSheet" aria-hidden="true"></canvas>
+  <div class="hero-bar">
+    <a class="brand" href="#" data-act="home" aria-label="Pais Patents home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <ellipse cx="32" cy="32" rx="26" ry="9.5" fill="none" stroke="var(--hot)" stroke-width="2.2"/>
+        <ellipse cx="32" cy="32" rx="26" ry="9.5" fill="none" stroke="var(--ion)" stroke-width="2.2" transform="rotate(90 32 32)"/>
+        <circle cx="32" cy="32" r="4.5" fill="#fff"/>
+      </svg>
+      <span class="brand-txt"><b>PAIS</b>/PATENTS</span>
+    </a>
+    <nav class="modules" aria-label="Archive sections">
+      <a class="mod mod-tmb" href="index.html"><span class="mod-dot" aria-hidden="true"></span>TMB Spaceships</a>
+      <a class="mod mod-pais" href="pais.html" aria-current="page"><span class="mod-dot" aria-hidden="true"></span>Pais Patents</a>
+    </nav>
+    <dl class="readouts" id="readouts"></dl>
+  </div>
+
+  <div class="hero-title">
+    <p class="eyebrow"><span class="blink">●</span> US Navy · Naval Air Warfare Center Aircraft Division · 2015–2018</p>
+    <h1><span class="h1a">Salvatore</span><span class="h1b">Pais</span></h1>
+  </div>
+
+  <div class="stage" id="stage" aria-hidden="true"></div>
+
+  <div class="hero-foot">
+    <div class="foot-row">
+      <div class="reaction" id="heroLine"></div>
+      <div class="exhibits" role="tablist" aria-label="Hero exhibit" id="exhibits"></div>
+    </div>
+    <div class="hints" id="hints" aria-label="Example searches"></div>
+  </div>
+</header>
+
+<div class="console-wrap" id="consoleWrap">
+  <div class="console">
+    <button class="console-brand" type="button" tabindex="-1" aria-label="Back to top">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="32" rx="26" ry="9.5" fill="none" stroke="var(--hot)" stroke-width="3"/><ellipse cx="32" cy="32" rx="26" ry="9.5" fill="none" stroke="var(--ion)" stroke-width="3" transform="rotate(90 32 32)"/><circle cx="32" cy="32" r="5" fill="#fff"/></svg>
+    </button>
+    <label for="q" class="console-k">
+      <svg class="wave" viewBox="0 0 24 24" aria-hidden="true"><path d="M-12 12c3-7 6-7 9 0s6 7 9 0 6-7 9 0 6 7 9 0 6-7 9 0 6 7 9 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Patent query</span>
+    </label>
+    <input id="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search" placeholder="Search the full text of every patent…">
+    <span class="console-stat" id="stat" aria-live="polite"></span>
+    <kbd class="kbd-slash" aria-hidden="true">/</kbd>
+  </div>
+</div>
+
+<main class="deck pais-deck" id="results">
+  <aside class="side" id="side" aria-label="Sections">
+    <div class="side-group">
+      <h3>Filings <small>5 + 1 continuation</small></h3>
+      <ol class="pside" id="sideDocs"></ol>
+    </div>
+    <div class="side-group">
+      <h3>On this page</h3>
+      <ul class="pside-links">
+        <li><a href="#overview">Overview &amp; timeline</a></li>
+        <li><a href="#drawings">Original drawings</a></li>
+        <li><a href="#library">Patent backup library</a></li>
+        <li><a href="#tmb">@TMBSPACESHIPS on Pais</a></li>
+      </ul>
+    </div>
+    <p class="side-note" id="sideNote"></p>
+  </aside>
+
+  <section class="results">
+    <div id="hits" class="hits" hidden></div>
+    <div id="overview" class="patents"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <p>Patent text, drawings and PDFs are public-domain US patent documents, copied from <b>Google Patents</b> so this page keeps working if they move. Part of the <a href="index.html">@TMBSPACESHIPS archive</a>.</p>
+    <p class="foot-k">Keys: <kbd>/</kbd> search · <kbd>Esc</kbd> clear / close · <kbd>←</kbd>/<kbd>→</kbd> previous / next patent while reading</p>
+  </div>
+</footer>
+
+<dialog class="inspect reader" id="reader" aria-labelledby="rdTitle">
+  <div class="insp-head">
+    <div class="insp-id" id="rdTitle"></div>
+    <div class="insp-nav">
+      <button class="icon-btn" type="button" data-act="rd-prev" aria-label="Previous patent (←)">←</button>
+      <button class="icon-btn" type="button" data-act="rd-next" aria-label="Next patent (→)">→</button>
+      <button class="icon-btn" type="button" data-act="rd-close" aria-label="Close (Esc)">✕</button>
+    </div>
+  </div>
+  <div class="insp-tabs" role="tablist" id="rdTabs"></div>
+  <div class="insp-body rd-body" id="rdBody"></div>
+</dialog>
+
+<dialog class="lightbox" id="lightbox" aria-label="Drawing viewer">
+  <div class="lb-stage" id="lbStage"></div>
+  <div class="lb-bar">
+    <div class="lb-cap" id="lbCap"></div>
+    <div class="lb-nav">
+      <button class="icon-btn" type="button" data-act="lb-prev" aria-label="Previous drawing">←</button>
+      <span class="lb-count" id="lbCount"></span>
+      <button class="icon-btn" type="button" data-act="lb-next" aria-label="Next drawing">→</button>
+      <a class="icon-btn" id="lbOpen" target="_blank" rel="noopener" aria-label="Open the drawing file" title="Open the drawing file">⤢</a>
+      <button class="icon-btn" type="button" data-act="lb-close" aria-label="Close">✕</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data/pais.js?v=370bdfebf0"></script>
+<script src="assets/reactor.js?v=b6d1e67577"></script>
+<script src="assets/patents.js?v=b7c9c194b6"></script>
+<script src="assets/pais.js?v=8e5f118e57"></script>
+</body>
+</html>
