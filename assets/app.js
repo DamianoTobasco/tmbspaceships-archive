@@ -162,6 +162,30 @@
   function stripLead(s) { return (s || '').replace(/^((?:@\w+[\s,]*)+)/, '').trim(); }
   function userLink(u) { return '<a href="https://x.com/' + esc(u) + '" target="_blank" rel="noopener">@' + esc(u) + '</a>'; }
 
+  var REDUCE = /[?&]still=1\b/.test(location.search) || !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // ease a displayed number from its last value to a new one
+  function tween(el, to, fmtFn, ms) {
+    var from = el._v || 0;
+    el._v = to;
+    if (el._raf) cancelAnimationFrame(el._raf);
+    if (REDUCE || document.hidden || from === to) { el.textContent = fmtFn(to); return; }
+    var t0 = performance.now();
+    (function tick(now) {
+      var k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmtFn(Math.round(from + (to - from) * e));
+      el._raf = k < 1 ? requestAnimationFrame(tick) : 0;
+    })(t0);
+    // frames can be throttled in a background tab; make sure the final value lands
+    setTimeout(function () { if (el._v === to) el.textContent = fmtFn(to); }, ms + 300);
+  }
+  // restart a CSS animation by re-adding its class
+  function replay(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  // posts in the top 5% by impressions get a "high flux" tag
+  var HI_VIEWS = (function () {
+    var v = POSTS.map(function (p) { return p.m[0]; }).sort(function (a, b) { return b - a; });
+    return v[Math.floor(v.length * 0.05)] || Infinity;
+  })();
+
   /* ───────────── query language ───────────── */
   var METRIC_IDX = { views: 0, impressions: 0, likes: 1, reposts: 2, retweets: 2, replies: 3, quotes: 4, bookmarks: 5 };
   function cmpParse(v) {
@@ -377,13 +401,14 @@
     var first = POSTS.reduce(function (a, p) { return p.ts < a.ts ? p : a; });
     var lastP = POSTS.reduce(function (a, p) { return p.ts > a.ts ? p : a; });
     var items = [
-      ['Posts', fmt(META.count)],
+      ['Posts', META.count, fmt],
       ['Span', first.ym.replace('-', '.') + ' → ' + lastP.ym.replace('-', '.')],
-      ['Σ Views', compact(totalViews)],
-      ['Media', fmt(META.media_files)],
-      ['Followers', fmt(META.followers)]
+      ['Σ Views', totalViews, compact],
+      ['Media', META.media_files, fmt],
+      ['Followers', META.followers, fmt]
     ];
-    $('#readouts').innerHTML = items.map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'; }).join('');
+    $('#readouts').innerHTML = items.map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + (r[2] ? r[2](r[1]) : r[1]) + '</dd></div>'; }).join('');
+    $$('#readouts dd').forEach(function (dd, i) { if (items[i][2]) tween(dd, items[i][1], items[i][2], 1100 + i * 130); });
     $('#footCount').textContent = fmt(META.count) + ' of ' + fmt(META.profile_posts) + ' posts archived';
     $('#q').placeholder = window.innerWidth < 640 ? 'Search ' + fmt(META.count) + ' posts…'
       : 'Search ' + fmt(META.count) + ' posts — words, "phrases", @accounts, type:original…';
@@ -407,11 +432,14 @@
   function renderFacets() {
     var c = cur.counts;
     function upd(sel, f, counts) {
-      $$(sel + ' .chip').forEach(function (b) {
+      var chips = $$(sel + ' .chip'), max = 1;
+      chips.forEach(function (b) { max = Math.max(max, counts[b.dataset.k] || 0); });
+      chips.forEach(function (b) {
         var k = b.dataset.k, n = counts[k] || 0, on = state[f].has(k);
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
         b.querySelector('.n').textContent = fmt(n);
         b.classList.toggle('zero', !n && !on);
+        b.style.setProperty('--p', (n / max * 100).toFixed(1) + '%');   // share of the largest chip
       });
     }
     upd('#fType', 'types', c.type);
@@ -423,17 +451,22 @@
     var arr = Object.keys(c.handle).map(function (k) { return [k, c.handle[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
     var top = arr.slice(0, 12).map(function (x) { return x[0]; });
     state.handles.forEach(function (h) { if (top.indexOf(h) < 0) top.push(h); });
+    var hmax = Math.max(1, arr.length ? arr[0][1] : 1);
     $('#fHandles').innerHTML = top.length ? top.map(function (k) {
       var on = state.handles.has(k);
-      return '<button type="button" class="chip c-r" data-f="handles" data-k="' + esc(k) + '" aria-pressed="' + on + '">@' +
+      return '<button type="button" class="chip c-r" style="--p:' + ((c.handle[k] || 0) / hmax * 100).toFixed(1) + '%" data-f="handles" data-k="' + esc(k) + '" aria-pressed="' + on + '">@' +
         esc(HANDLE_CASE.get(k) || k) + '<span class="n">' + fmt(c.handle[k] || 0) + '</span></button>';
     }).join('') : '<span class="side-note" style="margin:0">No replies in these results.</span>';
     if (focusK) { var fb = $('#fHandles [data-k="' + CSS.escape(focusK) + '"]'); if (fb) fb.focus(); }
   }
 
   function renderStat() {
-    var n = cur.list.length;
-    $('#stat').innerHTML = '<b>' + fmt(n) + '</b><span class="of"> / ' + fmt(POSTS.length) + '</span><span class="ms"> · ' + cur.ms.toFixed(1) + ' ms</span>';
+    var el = $('#stat'), n = cur.list.length;
+    if (!el.firstChild) el.innerHTML = '<b aria-hidden="true"></b><span class="sr"></span><span class="of"></span><span class="ms"></span>';
+    tween(el.children[0], n, fmt, 260);
+    el.children[1].textContent = fmt(n) + ' results';
+    el.children[2].textContent = ' / ' + fmt(POSTS.length);
+    el.children[3].textContent = ' · ' + cur.ms.toFixed(1) + ' ms';
   }
 
   function renderPills() {
@@ -455,54 +488,71 @@
     return 'M' + x + ',' + base + 'V' + (yTop + r) + 'Q' + x + ',' + yTop + ' ' + (x + r) + ',' + yTop +
       'H' + (x + w - r) + 'Q' + (x + w) + ',' + yTop + ' ' + (x + w) + ',' + (yTop + r) + 'V' + base + 'Z';
   }
-  function renderSpectrum() {
-    var wrap = $('#spectrumPlot');
-    var W = Math.max(280, wrap.clientWidth - 16);
-    var n = MONTHS.length;
+  var spW = 0;
+  function buildSpectrum(W) {
+    var wrap = $('#spectrumPlot'), n = MONTHS.length;
     SP.W = W; SP.step = (W - SP.padL - SP.padR) / n;
-    var bw = Math.max(2, Math.min(SP.step * 0.6, 16));
-    var span = SP.base - SP.top;
-    var cm = cur.counts.month;
-    // scale to the matching posts so a narrow query still reads; months that have posts
-    // but no matches keep a faint baseline mark
-    var maxT = Math.max(1, Math.max.apply(null, cm));
-    function y(v) { return SP.base - (v / maxT) * span; }
+    var bw = Math.max(2, Math.min(SP.step * 0.6, 16)), span = SP.base - SP.top;
     var s = '<svg viewBox="0 0 ' + W + ' ' + SP.H + '" role="img" aria-label="Posts per month, ' + MONTHS[0] + ' to ' + MONTHS[n - 1] + '">';
     s += '<defs><linearGradient id="spGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0feff"/><stop offset=".3" stop-color="#59f3ff"/><stop offset="1" stop-color="#59f3ff" stop-opacity=".35"/></linearGradient>' +
-      '<filter id="spGlow" x="-100%" y="-20%" width="300%" height="140%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
-    if (state.range) {
-      var i0 = MONTH_IDX.get(state.range[0]), i1 = MONTH_IDX.get(state.range[1]);
-      s += '<rect class="sp-sel" x="' + (SP.padL + i0 * SP.step) + '" y="' + (SP.top - 12) + '" width="' + ((i1 - i0 + 1) * SP.step) + '" height="' + (SP.base - SP.top + 12) + '" rx="4"/>';
-    }
+      '<filter id="spGlow" x="-10%" y="-20%" width="120%" height="140%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+    s += '<rect id="spSel" class="sp-sel" rx="4" style="display:none"/>';
     s += '<line class="sp-axis" x1="0" x2="' + W + '" y1="' + (SP.base + 0.5) + '" y2="' + (SP.base + 0.5) + '"/>';
-    var peakI = -1, peakV = 0;
     var bars = '', ghosts = '', axis = '', hits = '';
     MONTHS.forEach(function (m, i) {
-      var x0 = SP.padL + i * SP.step, cx = x0 + SP.step / 2, bx = cx - bw / 2;
-      var tot = MONTH_TOTAL[i], c = cm[i];
-      var inR = !state.range || (m >= state.range[0] && m <= state.range[1]);
-      if (tot) ghosts += '<path class="sp-ghost" d="' + barPath(bx, SP.base - 3, bw, SP.base, 1) + '"/>';
-      if (c) {
-        bars += '<path class="sp-bar' + (inR ? '' : ' off') + '" d="' + barPath(bx, Math.min(y(c), SP.base - 2), bw, SP.base, 2) + '"/>';
-        if (inR && c > peakV) { peakV = c; peakI = i; }
-      }
+      var x0 = SP.padL + i * SP.step, bx = x0 + SP.step / 2 - bw / 2;
+      if (MONTH_TOTAL[i]) ghosts += '<path class="sp-ghost" d="' + barPath(bx, SP.base - 3, bw, SP.base, 1) + '"/>';
+      // full-height bar, scaled to its value so height changes can ease
+      bars += '<rect class="sp-bar" x="' + bx.toFixed(2) + '" y="' + SP.top + '" width="' + bw.toFixed(2) + '" height="' + span + '" rx="2" style="transform:scaleY(0)"/>';
       var mo = +m.slice(5);
       if (mo === 1 || (i === 0 && mo <= 9)) {
         axis += '<line class="sp-tick" x1="' + x0 + '" x2="' + x0 + '" y1="' + SP.base + '" y2="' + (SP.base + 7) + '"/>' +
           '<text class="sp-year" x="' + (x0 + 4) + '" y="' + (SP.H - 8) + '">' + m.slice(0, 4) + '</text>';
       }
-      var tip = '<b>' + monthLabel(m) + '</b><br>' + fmt(c) + ' matching' + (c !== tot ? ' <span class="mut">of ' + fmt(tot) + ' posts</span>' : ' posts') +
-        '<br><span class="mut">click to isolate · drag for a window</span>';
-      hits += '<rect class="sp-hit" data-i="' + i + '" x="' + x0 + '" y="0" width="' + SP.step + '" height="' + (SP.base + 2) + '" data-tip="' + esc(tip) + '"/>' +
+      hits += '<rect class="sp-hit" data-i="' + i + '" x="' + x0 + '" y="0" width="' + SP.step + '" height="' + (SP.base + 2) + '"/>' +
         '<rect class="sp-hover" x="' + x0 + '" y="0" width="' + SP.step + '" height="' + SP.base + '" rx="3"/>';
     });
-    s += ghosts + '<g filter="url(#spGlow)">' + bars + '</g>' + axis;
-    if (peakI >= 0) {
-      var px = SP.padL + peakI * SP.step + SP.step / 2, anchor = px > W - 90 ? 'end' : px < 90 ? 'start' : 'middle';
-      s += '<text class="sp-peak" x="' + px + '" y="' + (Math.min(y(peakV), SP.base - 2) - 6) + '" text-anchor="' + anchor + '">' + MON[+MONTHS[peakI].slice(5) - 1] + ' ’' + MONTHS[peakI].slice(2, 4) + ' · ' + fmt(peakV) + '</text>';
-    }
-    s += hits + '<rect id="spDrag" class="sp-sel" x="0" y="0" width="0" height="0" style="display:none"/></svg>';
+    s += ghosts + '<g filter="url(#spGlow)">' + bars + '</g>' + axis + '<text id="spPeak" class="sp-peak"></text>' + hits +
+      '<rect id="spDrag" class="sp-sel" x="0" y="0" width="0" height="0" style="display:none"/></svg>';
     wrap.innerHTML = s;
+    spW = W;
+    void wrap.offsetWidth;   // flush styles so the bars grow in from zero
+  }
+  function renderSpectrum() {
+    var wrap = $('#spectrumPlot');
+    var W = Math.max(280, wrap.clientWidth - 16);
+    if (W !== spW || !wrap.querySelector('svg')) buildSpectrum(W);
+    var cm = cur.counts.month, span = SP.base - SP.top;
+    // scale to the matching posts so a narrow query still reads; months that have posts
+    // but no matches keep a faint baseline mark
+    var maxT = Math.max(1, Math.max.apply(null, cm));
+    var bars = $$('.sp-bar', wrap), hits = $$('.sp-hit', wrap);
+    var peakI = -1, peakV = 0;
+    MONTHS.forEach(function (m, i) {
+      var c = cm[i], tot = MONTH_TOTAL[i];
+      var inR = !state.range || (m >= state.range[0] && m <= state.range[1]);
+      bars[i].style.transform = 'scaleY(' + (c ? Math.max(c / maxT, 2 / span) : 0).toFixed(4) + ')';
+      bars[i].classList.toggle('off', !inR);
+      if (c && inR && c > peakV) { peakV = c; peakI = i; }
+      hits[i].setAttribute('data-tip', '<b>' + monthLabel(m) + '</b><br>' + fmt(c) + ' matching' +
+        (c !== tot ? ' <span class="mut">of ' + fmt(tot) + ' posts</span>' : ' posts') +
+        '<br><span class="mut">click to isolate · drag for a window</span>');
+    });
+    var sel = $('#spSel');
+    if (state.range) {
+      var i0 = MONTH_IDX.get(state.range[0]), i1 = MONTH_IDX.get(state.range[1]);
+      sel.setAttribute('x', SP.padL + i0 * SP.step); sel.setAttribute('y', SP.top - 12);
+      sel.setAttribute('width', (i1 - i0 + 1) * SP.step); sel.setAttribute('height', SP.base - SP.top + 12);
+      sel.style.display = '';
+    } else sel.style.display = 'none';
+    $('#spDrag').style.display = 'none';
+    var pk = $('#spPeak');
+    if (peakI >= 0) {
+      var px = SP.padL + peakI * SP.step + SP.step / 2;
+      pk.setAttribute('x', px); pk.setAttribute('y', SP.base - Math.max(peakV / maxT * span, 2) - 6);
+      pk.setAttribute('text-anchor', px > W - 90 ? 'end' : px < 90 ? 'start' : 'middle');
+      pk.textContent = MON[+MONTHS[peakI].slice(5) - 1] + ' ’' + MONTHS[peakI].slice(2, 4) + ' · ' + fmt(peakV);
+    } else pk.textContent = '';
 
     var matched = cm.reduce(function (a, b) { return a + b; }, 0);
     $('#spectrumRead').innerHTML = (state.range
@@ -600,7 +650,7 @@
     return '<div class="quoted"><span class="ctx-k">❝ Quoting ' + (p.ref.u ? userLink(p.ref.u) : 'a post') + '</span><p>' + fmtText(p.ref.x, p.ref.l, re) + '</p></div>';
   }
 
-  function cardHTML(p) {
+  function cardHTML(p, j) {
     var T = TYPE_BY[p.ty], re = cur.cq.hlRe;
     var lines = (p.body.match(/\n/g) || []).length;
     var long = p.body.length > 720 || lines > 12;
@@ -610,11 +660,15 @@
       var fm = re.exec(p.body);
       if (fm && (fm.index > 360 || (p.body.slice(0, fm.index).match(/\n/g) || []).length > 5)) long = false;
     }
-    return '<article class="shot c-' + p.ty + '" data-id="' + p.id + '" tabindex="-1" aria-label="' + esc(T.label + ', ' + p.ymd + ': ' + excerpt(p.body, 80)) + '">' +
+    return '<article class="shot enter c-' + p.ty + '" data-id="' + p.id + '" style="--d:' + Math.min(j || 0, 9) + '" tabindex="-1" aria-label="' + esc(T.label + ', ' + p.ymd + ': ' + excerpt(p.body, 80)) + '">' +
       '<header class="shot-head">' +
-        '<span class="shot-no"><i>SHOT</i> ' + pad(p.n) + '</span>' +
-        '<span class="badge"><span class="bsp">' + T.sp + '</span>' + T.label + '</span>' +
-        '<time datetime="' + p.t + '" title="' + esc(p.t.replace('.000Z', ' UTC').replace('T', ' ')) + '">' + p.ymd + ' · ' + p.hm + ' ET</time>' +
+        '<span class="tok" aria-hidden="true"><b>' + T.sp + '</b></span>' +
+        '<div class="shot-id">' +
+          '<div class="shot-kind"><span class="k">' + T.label + '</span><span class="shot-no"><i>SHOT</i> ' + pad(p.n) + '</span>' +
+            (p.m[0] >= HI_VIEWS ? '<span class="hi" title="Top 5% of the archive by impressions">⚡ High flux</span>' : '') +
+          '</div>' +
+          '<time datetime="' + p.t + '" title="' + esc(p.t.replace('.000Z', ' UTC').replace('T', ' ')) + '">' + p.ymd + ' · ' + p.hm + ' ET</time>' +
+        '</div>' +
         '<span class="grow"></span>' +
         '<button type="button" class="head-btn star" data-act="star" aria-pressed="' + stars.has(p.id) + '" aria-label="Star this post" title="Star (s)">★</button>' +
         '<a class="head-btn" href="' + xurl(p) + '" target="_blank" rel="noopener" aria-label="Open on X" title="Open on X">↗</a>' +
@@ -668,8 +722,8 @@
   }
 
   function hbars(rows, max, act) {
-    return '<div class="hbars">' + rows.map(function (r) {
-      return '<button type="button" class="hbar" data-act="' + act + '" data-k="' + esc(r.k) + '" data-tip="' + esc('<b>' + esc(r.label) + '</b><br>' + fmt(r.v) + ' posts · click to filter') + '">' +
+    return '<div class="hbars">' + rows.map(function (r, i) {
+      return '<button type="button" class="hbar" style="--i:' + i + '" data-act="' + act + '" data-k="' + esc(r.k) + '" data-tip="' + esc('<b>' + esc(r.label) + '</b><br>' + fmt(r.v) + ' posts · click to filter') + '">' +
         '<span class="lab">' + esc(r.label) + '</span><span class="trk"><i style="width:' + Math.max(1, (r.v / max) * 100).toFixed(1) + '%"></i></span><span class="val">' + fmt(r.v) + '</span></button>';
     }).join('') + '</div>';
   }
@@ -681,10 +735,9 @@
     var med = views[Math.floor(views.length / 2)];
     var withMedia = L.filter(function (p) { return p.md.length; }).length;
     var h = '';
-    h += '<dl class="t-kpis">' + [
-      ['Posts', fmt(L.length)], ['Σ Impressions', compact(sum(0))], ['Σ Likes', compact(sum(1))],
-      ['Σ Bookmarks', compact(sum(5))], ['Median views', compact(med)], ['With media', fmt(withMedia)]
-    ].map(function (k) { return '<div class="kpi"><dt>' + k[0] + '</dt><dd>' + k[1] + '</dd></div>'; }).join('') + '</dl>';
+    var kpis = [['Posts', L.length, fmt], ['Σ Impressions', sum(0), compact], ['Σ Likes', sum(1), compact],
+                ['Σ Bookmarks', sum(5), compact], ['Median views', med, compact], ['With media', withMedia, fmt]];
+    h += '<dl class="t-kpis">' + kpis.map(function (k) { return '<div class="kpi"><dt>' + k[0] + '</dt><dd>' + k[2](k[1]) + '</dd></div>'; }).join('') + '</dl>';
 
     // monthly impressions
     var mv = MONTHS.map(function () { return 0; }), mc = MONTHS.map(function () { return 0; });
@@ -692,14 +745,14 @@
     var mmax = Math.max.apply(null, mv) || 1;
     h += '<section class="panel t-wide"><div class="panel-head"><h2><span class="ph-k">Reach by month</span><span class="ph-sub">Σ impressions of matching posts</span></h2></div><div class="t-body">' +
       '<div class="cols">' + mv.map(function (v, i) {
-        return '<span class="col" data-tip="' + esc('<b>' + monthLabel(MONTHS[i]) + '</b><br>' + fmt(v) + ' impressions<br><span class="mut">' + fmt(mc[i]) + ' posts</span>') + '"><i style="height:' + (v ? Math.max(1.5, (v / mmax) * 100) : 0).toFixed(2) + '%"></i></span>';
+        return '<span class="col" style="--i:' + i + '" data-tip="' + esc('<b>' + monthLabel(MONTHS[i]) + '</b><br>' + fmt(v) + ' impressions<br><span class="mut">' + fmt(mc[i]) + ' posts</span>') + '"><i style="height:' + (v ? Math.max(1.5, (v / mmax) * 100) : 0).toFixed(2) + '%"></i></span>';
       }).join('') + '</div><div class="cols-x"><span>' + monthLabel(MONTHS[0]) + '</span><span>' + monthLabel(MONTHS[MONTHS.length - 1]) + '</span></div></div></section>';
 
     // top 10
     var top = L.slice().sort(SORTS.views).slice(0, 10), tmax = top[0] ? top[0].m[0] || 1 : 1;
     h += '<section class="panel t-wide"><div class="panel-head"><h2><span class="ph-k">Peak transmissions</span><span class="ph-sub">top 10 by impressions</span></h2></div><div class="t-body"><ol class="toplist">' +
       top.map(function (p, i) {
-        return '<li><button type="button" data-act="open" data-id="' + p.id + '"><span class="rk">' + String(i + 1).padStart(2, '0') + '</span><span class="dt">' + p.ymd + '</span><span class="ex">' + esc(excerpt(p.body || '[media]', 140)) + '</span>' +
+        return '<li style="--i:' + i + '"><button type="button" data-act="open" data-id="' + p.id + '"><span class="rk">' + String(i + 1).padStart(2, '0') + '</span><span class="dt">' + p.ymd + '</span><span class="ex">' + esc(excerpt(p.body || '[media]', 140)) + '</span>' +
           '<span class="vv">' + fmt(p.m[0]) + '<i style="width:' + ((p.m[0] / tmax) * 100).toFixed(1) + '%"></i></span></button></li>';
       }).join('') + '</ol></div></section>';
 
@@ -712,7 +765,7 @@
       heat += '<span class="hl">' + d + '</span>';
       for (var hh = 0; hh < 24; hh++) {
         var c = hm[wi][hh], a = c ? (0.12 + 0.88 * (c / hmax)) : 0;
-        heat += '<span class="cell" style="--a:' + a.toFixed(3) + '" data-tip="' + esc('<b>' + d + ' ' + String(hh).padStart(2, '0') + ':00 ET</b><br>' + fmt(c) + ' posts') + '"></span>';
+        heat += '<span class="cell" style="--a:' + a.toFixed(3) + ';--i:' + (wi + hh) + '" data-tip="' + esc('<b>' + d + ' ' + String(hh).padStart(2, '0') + ':00 ET</b><br>' + fmt(c) + ' posts') + '"></span>';
       }
     });
     heat += '</div><div class="heat-legend">fewer' + [0.12, 0.34, 0.56, 0.78, 1].map(function (a) { return '<i style="--a:' + a + '"></i>'; }).join('') + 'more · peak ' + fmt(hmax) + '</div>';
@@ -734,12 +787,13 @@
     // species
     var sc = {}; L.forEach(function (p) { sc[p.ty] = (sc[p.ty] || 0) + 1; });
     h += '<section class="panel t-wide"><div class="panel-head"><h2><span class="ph-k">Species mix</span><span class="ph-sub">post types</span></h2></div><div class="t-body"><div class="species">' +
-      TYPES.map(function (t) {
+      TYPES.map(function (t, i) {
         var v = sc[t.k] || 0;
-        return '<div class="sp-tile c-' + t.k + '"><div class="k"><span class="dot"></span>' + t.sp + ' ' + t.label + '</div><div class="v">' + fmt(v) + '</div><div class="p">' + (L.length ? ((v / L.length) * 100).toFixed(1) : 0) + '%</div></div>';
+        return '<div class="sp-tile c-' + t.k + '" style="--i:' + i + '"><div class="k"><span class="dot"></span>' + t.sp + ' ' + t.label + '</div><div class="v">' + fmt(v) + '</div><div class="p">' + (L.length ? ((v / L.length) * 100).toFixed(1) : 0) + '%</div></div>';
       }).join('') + '</div><p class="t-note" style="margin:12px 0 0">Original = proton, reply = electron, repost = boron-11, quote = alpha.</p></div></section>';
 
     el.innerHTML = h;
+    if (el.classList.contains('swap')) $$('.kpi dd', el).forEach(function (dd, i) { tween(dd, kpis[i][1], kpis[i][2], 900); });
   }
 
   function renderView(reset) {
@@ -770,7 +824,11 @@
     renderView();
     writeHash();
     var key = cur.list.length + ':' + state.q;
-    if (opts.fire && key !== lastResultKey && window.Reactor) window.Reactor.fire(1);
+    if (opts.fire && key !== lastResultKey) {
+      if (window.Reactor) window.Reactor.fire(1);
+      replay($('#spectrumPlot'), 'scan');
+      replay($('.console'), 'ping');
+    }
     lastResultKey = key;
     if (opts.scroll !== false) {
       var deck = $('#results'), top = deck.getBoundingClientRect().top + window.scrollY - 150;
@@ -828,7 +886,13 @@
   /* ───────────── inspector ───────────── */
   var inspDlg = $('#inspect'), lbDlg = $('#lightbox'), helpDlg = $('#help');
   var lastFocus = null;
-  function openInspect(id, tab) {
+  // slide the inspector's content in from the side it came from (or fade for a tab change)
+  function swapBody(cls) {
+    var b = $('#inspBody');
+    b.classList.remove('sw-next', 'sw-prev', 'sw-tab');
+    if (cls) replay(b, cls);
+  }
+  function openInspect(id, tab, anim) {
     var p = BY_ID.get(id);
     if (!p) return;
     if (!inspDlg.open) lastFocus = document.activeElement;
@@ -837,6 +901,7 @@
     if (inspTab === 'embed' && !p.sh) inspTab = 'post';
     if (inspTab === 'thread' && !p.th) inspTab = 'post';
     renderInspect();
+    swapBody(anim);
     if (!inspDlg.open) inspDlg.showModal();
     $('#inspBody').scrollTop = 0;
     writeHash();
@@ -889,7 +954,7 @@
     var p = BY_ID.get(inspId), i = cur.list.indexOf(p);
     if (i < 0) return;
     var n = cur.list[i + d];
-    if (n) openInspect(n.id, inspTab === 'thread' ? 'post' : inspTab);
+    if (n) openInspect(n.id, inspTab === 'thread' ? 'post' : inspTab, d > 0 ? 'sw-next' : 'sw-prev');
   }
   inspDlg.addEventListener('close', function () {
     inspId = null;
@@ -994,16 +1059,23 @@
     $$('[data-id="' + id + '"] .star, #inspect .star').forEach(function (b) {
       var on = stars.has(id);
       b.setAttribute('aria-pressed', on);
+      if (on) replay(b, 'pop');
       if (b.closest('#inspect')) b.textContent = on ? '★ Starred' : '☆ Star';
     });
     toast(stars.has(id) ? '★ Starred — find it under Payload › Starred' : 'Star removed');
     if (state.has.has('star')) update({ scroll: false });
     else { compute(); renderFacets(); }
   }
+  var swapT = 0;
   function setView(v) {
     if (v === state.view) return;
     state.view = v;
+    var tel = $('#view-telemetry');
+    tel.classList.toggle('swap', v === 'telemetry');   // charts animate in only on a view switch
     renderView();
+    replay($('#view-' + v), 'viewin');
+    clearTimeout(swapT);
+    if (v === 'telemetry') swapT = setTimeout(function () { tel.classList.remove('swap'); }, 1900);
     writeHash();
   }
   function resetAll() {
@@ -1047,7 +1119,7 @@
     var tab = t.closest('.tabs [data-view]');
     if (tab) { setView(tab.dataset.view); return; }
     var itab = t.closest('#inspTabs [data-tab]');
-    if (itab) { inspTab = itab.dataset.tab; renderInspect(); $('#inspBody').scrollTop = 0; return; }
+    if (itab) { inspTab = itab.dataset.tab; renderInspect(); swapBody('sw-tab'); $('#inspBody').scrollTop = 0; return; }
 
     var actEl = t.closest('[data-act]');
     var card = t.closest('.shot');
@@ -1108,10 +1180,12 @@
   $('#lbStage').addEventListener('click', function (e) { if (e.target === e.currentTarget) lbDlg.close(); });
 
   /* ───────────── inputs ───────────── */
-  var qT = 0;
+  var qT = 0, busyT = 0;
   $('#q').addEventListener('input', function (e) {
     clearTimeout(qT);
-    var v = e.target.value;
+    var v = e.target.value, box = $('.console');
+    box.classList.add('busy');
+    clearTimeout(busyT); busyT = setTimeout(function () { box.classList.remove('busy'); }, 500);
     qT = setTimeout(function () { state.q = v; update({ fire: true, scroll: false }); }, 90);
   });
   $('#q').addEventListener('keydown', function (e) {
