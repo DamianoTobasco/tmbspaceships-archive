@@ -801,21 +801,24 @@
     $('#view-stream').hidden = v !== 'stream';
     $('#view-grid').hidden = v !== 'grid';
     $('#view-telemetry').hidden = v !== 'telemetry';
+    $('#view-patents').hidden = v !== 'patents';
     $$('.tabs [role="tab"]').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.view === v ? 'true' : 'false'); });
-    var empty = !cur.list.length || (v === 'grid' && reset !== false && !cur.list.some(function (p) { return p.md.length; }));
+    var empty = v !== 'patents' && (!cur.list.length) || (v === 'grid' && reset !== false && !cur.list.some(function (p) { return p.md.length; }));
     if (v === 'stream') renderStream(true);
     else if (v === 'grid') renderGrid(true);
+    else if (v === 'patents') { if (window.PaisPatents) window.PaisPatents.render($('#view-patents')); }
     else renderTelemetry();
     $('#empty').hidden = !empty;
     if (empty && v === 'grid' && cur.list.length) $('#empty p').textContent = 'None of the matching posts carry images or video.';
     else $('#empty p').textContent = 'Nothing in the archive matches this query. Loosen a filter or try a shorter word.';
-    $('#sentinel').hidden = v === 'telemetry';
+    $('#sentinel').hidden = v === 'telemetry' || v === 'patents';
   }
 
   /* ───────────── update + url state ───────────── */
   var lastResultKey = '';
   function update(opts) {
     opts = opts || {};
+    if (opts.fire && state.view === 'patents') state.view = 'stream';   // a new search shows its results
     compute();
     renderStat();
     renderPills();
@@ -839,7 +842,7 @@
   var inspId = null, inspTab = 'post';
   // The hosted viewer passes only a plain #name through shared links, so the web build uses
   // #shot-1234 for a post and #spectrograph / #telemetry for views.
-  var VIEW_HASH = { grid: 'spectrograph', telemetry: 'telemetry' };
+  var VIEW_HASH = { grid: 'spectrograph', telemetry: 'telemetry', patents: 'pais-patents' };
   function writeHash() {
     if (MODE === 'web') {
       var nm = inspId ? 'shot-' + BY_ID.get(inspId).n : (VIEW_HASH[state.view] || '');
@@ -863,7 +866,7 @@
   function readHash() {
     if (MODE === 'web') {
       var name = location.hash.slice(1), sm = name.match(/^shot-(\d+)$/);
-      state.view = name === 'spectrograph' ? 'grid' : name === 'telemetry' ? 'telemetry' : 'stream';
+      state.view = name === 'spectrograph' ? 'grid' : name === 'telemetry' ? 'telemetry' : name === 'pais-patents' ? 'patents' : 'stream';
       var sp = sm && BY_SHOT.get(+sm[1]);
       return sp ? sp.id : null;
     }
@@ -877,7 +880,7 @@
     var f = h.get('from'), u = h.get('until');
     state.range = f && u && MONTH_IDX.has(f) && MONTH_IDX.has(u) ? [f, u] : null;
     state.sort = SORTS[h.get('sort')] ? h.get('sort') : 'auto';
-    state.view = ['stream', 'grid', 'telemetry'].indexOf(h.get('view')) >= 0 ? h.get('view') : 'stream';
+    state.view = ['stream', 'grid', 'telemetry', 'patents'].indexOf(h.get('view')) >= 0 ? h.get('view') : 'stream';
     $('#q').value = state.q;
     $('#sort').value = state.sort;
     return h.get('post');
@@ -1239,6 +1242,7 @@
       case '1': setView('stream'); break;
       case '2': setView('grid'); break;
       case '3': setView('telemetry'); break;
+      case '4': setView('patents'); break;
       case 'r': case 'R': randomPost(); break;
       case '?': helpDlg.showModal(); break;
     }

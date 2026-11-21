@@ -903,3 +903,66 @@ dialog::backdrop { animation: fade .25s both; }
 }
 /* ?still=1: finished frame for preview captures */
 .still *, .still *::before, .still *::after { animation: none !important; transition: none !important; }
+
+/* ───────────────────────── PAIS PATENTS (view 4) ───────────────────────── */
+.patents { display: flex; flex-direction: column; gap: 16px; padding-top: 14px; }
+.pp-intro { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, 1fr); gap: 22px; padding: 20px 22px; overflow: hidden; }
+.pp-intro::before { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(520px 220px at 0% 0%, rgba(var(--hot-rgb), .08), transparent 70%), radial-gradient(520px 260px at 100% 100%, rgba(var(--ele-rgb), .1), transparent 70%); }
+.pp-intro-txt { position: relative; }
+.pp-intro .eyebrow { margin-bottom: 8px; }
+.pp-h { margin: 0 0 12px; font: 400 clamp(17px, 2.2vw, 24px)/1.25 var(--disp); letter-spacing: .06em; text-transform: uppercase;
+  background: linear-gradient(180deg, #fff 10%, #ffe6b8 55%, var(--hot)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pp-intro p { margin: 0 0 10px; color: var(--text-2); font-size: 14.5px; }
+.pp-small { font-size: 12.5px !important; color: var(--muted) !important; }
+.pp-jump { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.pp-jump a { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line-2);
+  background: rgba(255,255,255,.02); font: 500 11.5px/1.1 var(--mono); color: var(--text-2); }
+.pp-jump a b { color: var(--hot); font-weight: 500; }
+.pp-jump a:hover { color: var(--ion); border-color: rgba(var(--ion-rgb), .6); text-decoration: none; }
+.pp-tl { position: relative; list-style: none; margin: 0; padding: 4px 0 4px 16px; border-left: 1px solid var(--line-2); display: flex; flex-direction: column; gap: 7px; }
+.pp-tl li { position: relative; display: grid; grid-template-columns: 62px 1fr; gap: 10px; font-size: 12.5px; color: var(--text-2); }
+.pp-tl li::before { content: ''; position: absolute; left: -20.5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--ion)); box-shadow: 0 0 8px var(--c, var(--ion)); }
+.pp-tl-f { --c: var(--ion); } .pp-tl-g { --c: var(--bor); } .pp-tl-n { --c: var(--hot); } .pp-tl-a { --c: var(--alp); }
+.pp-tl-d { font: 500 11px/1.5 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.pp-card { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: linear-gradient(180deg, rgba(14, 19, 42, .9), rgba(8, 11, 26, .92)); scroll-margin-top: 96px; }
+.pp-card:hover { border-color: rgba(var(--hot-rgb), .3); box-shadow: 0 14px 50px -22px rgba(var(--hot-rgb), .45); }
+.pp-viz { position: relative; border-bottom: 1px solid var(--line); background: #081644; }
+.pp-viz canvas { display: block; width: 100%; height: clamp(320px, 36vw, 440px); }
+.pp-body { padding: 16px 20px 18px; }
+.pp-head { display: flex; gap: 14px; align-items: flex-start; }
+.pp-n { flex: none; font: 400 22px/1 var(--disp); color: var(--hot); text-shadow: 0 0 18px rgba(var(--hot-rgb), .6); padding-top: 3px; }
+.pp-head h3 { margin: 0; font: 600 18px/1.3 var(--sans); color: var(--text); }
+.pp-no { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font: 500 12px/1 var(--mono); }
+.pp-status { padding: 4px 8px; border-radius: 5px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+.pp-status.lapsed { color: var(--hot); border: 1px solid rgba(var(--hot-rgb), .45); background: rgba(var(--hot-rgb), .08); }
+.pp-status.abandoned { color: var(--alp); border: 1px solid rgba(var(--alp-rgb), .45); background: rgba(var(--alp-rgb), .08); }
+.pp-cols { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr); gap: 22px; margin-top: 14px; }
+.pp-text p { margin: 0 0 12px; color: var(--text-2); font-size: 14.5px; line-height: 1.65; }
+.pp-quote { margin: 0 0 12px; padding: 10px 14px; border-left: 2px solid var(--hot); border-radius: 0 8px 8px 0; background: rgba(var(--hot-rgb), .05);
+  font: italic 400 15px/1.5 var(--sans); color: #fff1d6; }
+.pp-quote cite { display: block; margin-top: 4px; font: 500 10px/1 var(--mono); font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.pp-note { font-size: 13px !important; color: var(--muted) !important; }
+.pp-side dl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 0 8px; }
+.pp-side dl div { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: rgba(255,255,255,.015); }
+.pp-side dt { font: 500 9px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.pp-side dd { margin: 5px 0 0; font: 500 12.5px/1.25 var(--mono); color: var(--text); }
+.pp-dates dd { color: var(--ion); }
+.pp-by { margin: 4px 0 0; font: 500 11px/1.5 var(--mono); color: var(--faint); }
+.pp-tmb ol { list-style: none; margin: 0; padding: 8px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+.pp-tmb li button { width: 100%; display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; text-align: left; padding: 10px 12px;
+  border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.015); color: var(--text-2); }
+.pp-tmb li button:hover { border-color: rgba(var(--ion-rgb), .5); color: var(--text); }
+.pp-tmb-d { font: 500 11px/1.5 var(--mono); color: var(--muted); }
+.pp-tmb-x { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.pp-tmb-ctx { font-size: 12.5px; color: var(--muted); }
+.pp-tmb-reply { font-size: 14px; color: var(--text); }
+.pp-src { margin: 2px 2px 0; font-size: 12px; color: var(--faint); }
+.anim .patents.viewin .pp-card { animation: fadeUp .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 70ms + 80ms); }
+@media (max-width: 1020px) { .pp-intro, .pp-cols { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .pp-body { padding: 14px 14px 16px; }
+  .pp-viz canvas { height: 300px; }
+  .pp-head h3 { font-size: 16px; }
+  .pp-tmb li button { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+}
