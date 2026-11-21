@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Michroma&family=Architects+Daughter&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303040a'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%2359f3ff' stroke-width='3'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%23a58bff' stroke-width='3' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='9' fill='none' stroke='%23ff5fae' stroke-width='3' transform='rotate(120 32 32)'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23fff'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/style.css?v=c8b014fcd8">
+<link rel="stylesheet" href="assets/style.css?v=39bc8979a0">
 </head>
 <body>
 <a class="skip" href="#results">Skip to results</a>
@@ -33,7 +33,7 @@
 <div class="beam fx" aria-hidden="true"><i id="beam"></i></div>
 <button class="totop fx" id="toTop" type="button" aria-label="Back to top"><span aria-hidden="true">↑</span></button>
 
-<header class="hero" id="hero" data-exhibit="reactor">
+<header class="hero" id="hero" data-exhibit="pump">
   <canvas id="reactor" aria-hidden="true"></canvas>
   <canvas id="blueprint" aria-hidden="true"></canvas>
   <div class="hero-bar">
@@ -58,21 +58,45 @@
 
   <div class="hero-foot">
     <div class="foot-row">
+      <div class="reaction" data-for="pump">
+        <span class="rx e">20 kV @ 300 kHz</span><span class="op opt">·</span><span class="rx opt">1 GHz magnetron</span><span class="op opt">·</span><span class="rx b opt">piston 10–30 Hz</span>
+        <span class="rx-sep"></span>
+        <span class="rx-k">arcs</span><span class="rx-v" id="count-pump">0000</span>
+        <span class="rx-sep"></span>
+        <button class="rx-link" type="button" data-act="open" data-id="1863076717251719301"><span class="opt">Original sketch · </span>shot 0566 →</button>
+      </div>
+      <div class="reaction" data-for="craft">
+        <span class="rx e">60 GHz</span><span class="op opt">·</span><span class="rx opt">mod 1.3–1.8 GHz</span><span class="op opt">·</span><span class="rx b opt">diaphragm .1–70 Hz</span>
+        <span class="rx-sep"></span>
+        <span class="rx-k">bounces</span><span class="rx-v" id="count-craft">0000</span>
+        <span class="rx-sep"></span>
+        <button class="rx-link" type="button" data-act="open" data-id="1865838548815053118"><span class="opt">Original poster · </span>shot 0712 →</button>
+      </div>
+      <div class="reaction" data-for="bubble">
+        <span class="rx e">HV LF AC</span><span class="op opt">·</span><span class="rx opt">double pulsed</span><span class="op opt">·</span><span class="rx b opt">under 70 Hz</span>
+        <span class="rx-sep"></span>
+        <span class="rx-k">pulses</span><span class="rx-v" id="count-bubble">0000</span>
+        <span class="rx-sep"></span>
+        <button class="rx-link" type="button" data-act="open" data-id="1819639375367377026"><span class="opt">Original sketch · </span>shot 0403 →</button>
+      </div>
+      <div class="reaction" data-for="mod">
+        <span class="rx e">60 GHz mod ≈ 1.41 GHz</span><span class="op opt">·</span><span class="rx opt">diaphragm under 70 Hz</span><span class="op opt">·</span><span class="rx b opt">.250″ 4130 steel</span>
+        <span class="rx-sep"></span>
+        <span class="rx-k">strokes</span><span class="rx-v" id="count-mod">0000</span>
+        <span class="rx-sep"></span>
+        <button class="rx-link" type="button" data-act="open" data-id="1963368183693201644"><span class="opt">Original sketch · </span>shot 1474 →</button>
+      </div>
       <div class="reaction" data-for="reactor" aria-hidden="true">
         <span class="rx">p</span><span class="op">+</span><span class="rx b"><sup>11</sup>B</span><span class="op">→</span><span class="rx a">3 <sup>4</sup>He</span><span class="op">+</span><span class="rx e">8.7 MeV</span>
         <span class="rx-sep"></span>
         <span class="rx-k">α events</span><span class="rx-v" id="alphaCount">0000</span>
       </div>
-      <div class="reaction" data-for="pump">
-        <span class="rx e">20 kV @ 300 kHz</span><span class="op opt">·</span><span class="rx opt">1 GHz magnetron</span><span class="op opt">·</span><span class="rx b opt">piston 10–30 Hz</span>
-        <span class="rx-sep"></span>
-        <span class="rx-k">arcs</span><span class="rx-v" id="arcCount">0000</span>
-        <span class="rx-sep"></span>
-        <button class="rx-link" type="button" data-act="open" data-id="1863076717251719301"><span class="opt">Original sketch · </span>shot 0566 →</button>
-      </div>
       <div class="exhibits" role="tablist" aria-label="Hero exhibit">
-        <button type="button" role="tab" aria-selected="true" data-exhibit-pick="reactor"><span>01</span>Fusion drive</button>
-        <button type="button" role="tab" aria-selected="false" data-exhibit-pick="pump"><span>02</span>Ion Pumpy Thing</button>
+        <button type="button" role="tab" aria-selected="true" aria-label="Ion Pumpy Thing" title="Ion Pumpy Thing" data-exhibit-pick="pump"><span>01</span><b>Ion Pumpy Thing</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-label="Brown-Cahill Method" title="Brown-Cahill Method" data-exhibit-pick="craft"><span>02</span><b>Brown-Cahill Method</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-label="Vacuum Bubble" title="Vacuum Bubble" data-exhibit-pick="bubble"><span>03</span><b>Vacuum Bubble</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-label="Plasma Modulator" title="Plasma Modulator" data-exhibit-pick="mod"><span>04</span><b>Plasma Modulator</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-label="Fusion drive" title="Fusion drive" data-exhibit-pick="reactor"><span>05</span><b>Fusion drive</b></button>
       </div>
     </div>
     <div class="hints" id="hints" aria-label="Example searches"></div>
@@ -238,8 +262,9 @@
 <div class="tip" id="tip" role="tooltip" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="data/posts.js?v=f00df0ea2a"></script>
-<script src="assets/reactor.js?v=f2532fa816"></script>
+<script src="data/posts.js?v=9a1ca2f078"></script>
+<script src="assets/reactor.js?v=b6d1e67577"></script>
+<script src="assets/sheets.js?v=aed4175f90"></script>
 <script src="assets/app.js?v=b3b00156cc"></script>
 </body>
 </html>
