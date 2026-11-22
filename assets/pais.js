@@ -338,7 +338,7 @@
   function cardHTML(r, i) {
     var d = D[r.gp];
     return '<article class="pp-card" id="pais-' + r.key + '" style="--i:' + i + '">' +
-      '<div class="pp-viz"><canvas data-viz="' + i + '" role="img" aria-label="Animated cross-section of the ' + esc(r.title.toLowerCase()) + ', drawn from the patent text"></canvas></div>' +
+      '<div class="pp-viz" data-key="' + r.key + '" data-mode="bp"><canvas data-viz="' + i + '" role="img" aria-label="Animated cross-section of the ' + esc(r.title.toLowerCase()) + ', drawn from the patent text"></canvas></div>' +
       '<div class="pp-body">' +
         '<header class="pp-head"><span class="pp-n">0' + (i + 1) + '</span>' +
           '<div><h3>' + esc(r.title) + '</h3>' +
@@ -462,6 +462,55 @@
     } else vizzes.forEach(function (v) { v.on = true; vSize(v); vDraw(v, 0); });
     window.addEventListener('resize', function () { vizzes.forEach(function (v) { v.key = ''; if (v.on) { vSize(v); vDraw(v, 0); } }); });
     document.addEventListener('visibilitychange', vLoop);
+    init3D(el);
+  }
+
+  /* ── 3D working models (pais3d.js): a card with a model gets a 3D / Blueprint switch ── */
+  var P3 = window.Pais3D, models = [];
+  function pref3D() { try { return localStorage.getItem('pais-viz'); } catch (e) { return null; } }
+  function init3D(el) {
+    if (!P3 || !P3.ok) return;
+    $$('.pp-viz', el).forEach(function (viz) {
+      var key = viz.getAttribute('data-key');
+      if (!P3.scenes[key]) return;
+      var sw = document.createElement('div'), box = document.createElement('div');
+      sw.className = 'pp-mode'; sw.setAttribute('role', 'tablist'); sw.setAttribute('aria-label', 'Drawing style');
+      sw.innerHTML = '<button type="button" role="tab" data-mode="3d">3D working model</button><button type="button" role="tab" data-mode="bp">Blueprint</button>';
+      box.className = 'p3d'; box.hidden = true;
+      viz.appendChild(box); viz.appendChild(sw);
+      var m = { viz: viz, box: box, inst: null, mode: 'bp', on: false, bp: viz.querySelector('canvas[data-viz]') };
+      models.push(m);
+      m.set = function (mode) {
+        if (mode === '3d' && !m.inst) m.inst = P3.create(box, key);
+        if (mode === '3d' && !m.inst) mode = 'bp';
+        m.mode = mode;
+        viz.setAttribute('data-mode', mode);
+        box.hidden = mode !== '3d'; m.bp.hidden = mode === '3d';
+        $$('button', sw).forEach(function (b) { b.setAttribute('aria-selected', b.getAttribute('data-mode') === mode ? 'true' : 'false'); });
+        run3D(m);
+        if (mode === 'bp') { var v = vizzes.filter(function (x) { return x.cv === m.bp; })[0]; if (v) { v.key = ''; vSize(v); vDraw(v, 0); } vLoop(); }
+      };
+      sw.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-mode]');
+        if (!b) return;
+        m.set(b.getAttribute('data-mode'));
+        try { localStorage.setItem('pais-viz', m.mode); } catch (err) { /* private mode */ }
+      });
+      viz.addEventListener('p3d-fail', function () { sw.hidden = true; m.inst = null; m.set('bp'); });   // no usable WebGL: keep the blueprint
+      m.set(pref3D() === 'bp' ? 'bp' : '3d');
+    });
+    if ('IntersectionObserver' in window) {
+      var io3 = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { var m = models.filter(function (x) { return x.viz === en.target; })[0]; if (m) { m.on = en.isIntersecting; run3D(m); } });
+      }, { rootMargin: '60px 0px' });
+      models.forEach(function (m) { io3.observe(m.viz); });
+    } else models.forEach(function (m) { m.on = true; run3D(m); });
+    document.addEventListener('visibilitychange', function () { models.forEach(run3D); });
+    window.addEventListener('resize', function () { models.forEach(function (m) { if (m.inst && m.mode === '3d') m.inst.resize(); }); });
+  }
+  function run3D(m) {
+    if (!m.inst) return;
+    if (m.mode === '3d' && m.on && !document.hidden && !$('#overview').hidden) m.inst.start(); else m.inst.stop();
   }
   function vSize(v) {
     var r = v.cv.getBoundingClientRect();
@@ -490,11 +539,12 @@
     vRaf = 0;
     if (!vRunning) return;
     var dt = Math.min(0.05, (now - (vLast || now)) / 1000); vLast = now;
-    vizzes.forEach(function (v) { if (v.on) { vSize(v); vDraw(v, dt); } });
+    vizzes.forEach(function (v) { if (v.on && !v.cv.hidden) { vSize(v); vDraw(v, dt); } });
     vRaf = requestAnimationFrame(vFrame);
   }
   function vLoop() {
-    var want = !reduce && !document.hidden && vizzes.some(function (v) { return v.on; }) && !$('#overview').hidden;
+    var want = !reduce && !document.hidden && vizzes.some(function (v) { return v.on && !v.cv.hidden; }) && !$('#overview').hidden;
+    models.forEach(run3D);
     if (want && !vRunning) { vRunning = true; vLast = 0; vRaf = requestAnimationFrame(vFrame); }
     else if (!want && vRunning) { vRunning = false; if (vRaf) cancelAnimationFrame(vRaf); vRaf = 0; }
   }
