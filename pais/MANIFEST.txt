@@ -1,0 +1,48 @@
+Salvatore Pais / US Navy patents: offline backup
+Retrieved 2026-11-21 from Google Patents (patents.google.com / patentimages.storage.googleapis.com).
+US patent documents are public domain. pdf/ = official USPTO PDFs, fig/ = original drawing sheets,
+text/ = plain-text copies (abstract, description, claims, legal events). Open ../pais.html for the reader.
+Check a copy with:  shasum -a 256 -c <(grep -E '^[0-9a-f]{64}' MANIFEST.txt | awk '{print $1"  "$3}')
+
+sha256                                                            bytes  file  source page
+f40c612ea1ef94cc8c5ab51434137a86bce0b371b7458a548fc9c9e1349e341d    1061436  pdf/US10135366B2.pdf  https://patents.google.com/patent/US10135366B2/en
+0d7e5472d871d5e7465041c19f7c8b05f5f2703eaa14726698dc7a00bfb7abf5     810530  pdf/US10144532B2.pdf  https://patents.google.com/patent/US10144532B2/en
+f45b488099eebd2172d85a6b82e739b1696e55c847b5a4846d458a259aa13238     891879  pdf/US10322827B2.pdf  https://patents.google.com/patent/US10322827B2/en
+941a7470abbe469a0e34e6c16bbb66ed14abe4614c54e1ff61f1b2ff70e738ed     729428  pdf/US20170025935A1.pdf  https://patents.google.com/patent/US20170025935A1/en
+4d16dc97f3355ac4b7386f77e53bc40f3f71d183c4829f6d2e9e109d2d150f8d     806060  pdf/US20170313446A1.pdf  https://patents.google.com/patent/US20170313446A1/en
+d143ab2129ec24b102216510948e7f7ac7b27b06317a340b46d5b4078f7c3f24     868160  pdf/US20180229864A1.pdf  https://patents.google.com/patent/US20180229864A1/en
+a3cd3f7a6aa52205d0e6983e428f4a64cde0a6a390214f7d50cb975ee288cb4d     872542  pdf/US20190058105A1.pdf  https://patents.google.com/patent/US20190058105A1/en
+dbd3817af42d750e4c1b83930df9fbd8192e8968bf2299946be7290c87f10991     923911  pdf/US20190295733A1.pdf  https://patents.google.com/patent/US20190295733A1/en
+55a5de728424cbe755f0cc4ef02f6249afba6c3c89f3978d16658d3e959109ff     873203  pdf/US20190348597A1.pdf  https://patents.google.com/patent/US20190348597A1/en
+9f2dcc7418e207e9f3160924a98667aac5ddc0c012fbc1a75da8c6c7b90762f4      23150  fig/US10135366B2-0.png  https://patents.google.com/patent/US10135366B2/en
+e94259e2c4bb95bcafbcda53ac908b4dbe09d53c7e2fc7c14210ca66ba1c9e6a      44054  fig/US10135366B2-1.png  https://patents.google.com/patent/US10135366B2/en
+6a4294a86662be590113ce2525fe994db818e640c16619177ebd8b0d385df615      29544  fig/US10135366B2-2.png  https://patents.google.com/patent/US10135366B2/en
+d0993246c8569a261b83d15c2d0ad7cd11621e8e2146fe20bf7c266cb3454ee8      30807  fig/US10144532B2-0.png  https://patents.google.com/patent/US10144532B2/en
+cbb7e2f1476a617924de36712d703eae8035689ede6574f1c032158a45f2df2a      89265  fig/US10144532B2-1.png  https://patents.google.com/patent/US10144532B2/en
+d8a61585d4d067e13bfddee54df51cfb16c39a5e33e16d17203519c847ecaf1e      24079  fig/US10322827B2-0.png  https://patents.google.com/patent/US10322827B2/en
+f1b2d8721848e4d48aa9bac359c339e7087c8086902f9e0e5ff333c76405dc64      26931  fig/US10322827B2-1.png  https://patents.google.com/patent/US10322827B2/en
+6086b40cb0f2e6bcb4da5082a15250b6391c3145531c2e55e3cf45b33ad26194      18175  fig/US10322827B2-2.png  https://patents.google.com/patent/US10322827B2/en
+908cf7659ccc40282d6b242fc2d265df5a7f974be9a118d14f3cf64c9339d30e      23583  fig/US20170025935A1-0.png  https://patents.google.com/patent/US20170025935A1/en
+f3569a1f0616d1384e224636578b24e2a7669a89ec1ae4d8a2bdd561c11654d2      44212  fig/US20170025935A1-1.png  https://patents.google.com/patent/US20170025935A1/en
+872e5f1f63cff407adec6b67e55af16e2704e9f0d49a9f9653c75b8f1b6499ba      29833  fig/US20170025935A1-2.png  https://patents.google.com/patent/US20170025935A1/en
+049087792bd9fa7efba532596c186fdf3d32d10f32ed65b43675d2df0270d918      52221  fig/US20170313446A1-0.png  https://patents.google.com/patent/US20170313446A1/en
+4a95fe0d8d98b53805c5b879db50a5827decfca1507b2743f590b249c344d0ee      88470  fig/US20170313446A1-1.png  https://patents.google.com/patent/US20170313446A1/en
+ad4d0f55d92772dab81a281e0ca0f6946b4e04a6a79852ec1f86e92c9a994e33      25288  fig/US20180229864A1-0.png  https://patents.google.com/patent/US20180229864A1/en
+db1c3b7926034f6dc3a4d73f313f6d8c72fb4de9fa583fb125e74cb683efb9dc      26110  fig/US20180229864A1-1.png  https://patents.google.com/patent/US20180229864A1/en
+6701396070f56d8d02685a493e31c792afba2f1e4171363e1f296062583b3f0b      17915  fig/US20180229864A1-2.png  https://patents.google.com/patent/US20180229864A1/en
+a43f3ee1ec0408a0b3b9af5a368807f0aaf0dde637182d406f1339dc7f51d0c7      15895  fig/US20190058105A1-0.png  https://patents.google.com/patent/US20190058105A1/en
+570f5c1a916fe7c208f7359ca120b3c9462c753b446fae080049932d604f22c6      48099  fig/US20190058105A1-1.png  https://patents.google.com/patent/US20190058105A1/en
+c642c74206950df597042328a6e5bf87980e8873f185f17437afbe31050e0d7d      39975  fig/US20190295733A1-0.png  https://patents.google.com/patent/US20190295733A1/en
+cba8404a92766a59aa0a4ec79621d93a7df9de148e12be2a7be998a7075f71f7      63749  fig/US20190295733A1-1.png  https://patents.google.com/patent/US20190295733A1/en
+01a40743da094f0d599de59ef2c6ae100d366ee0647d90cb4a395b500db37948      22295  fig/US20190295733A1-2.png  https://patents.google.com/patent/US20190295733A1/en
+c5c3c4f0e2de223faa1ad6bf76deb35c12b2c16752181acc23a76a3fc96ddb9f      15464  fig/US20190348597A1-0.png  https://patents.google.com/patent/US20190348597A1/en
+5a6cb1f38455c0fd91bffa7f1c5f92a0bdcf4e81dd10a8cae9d0145fa3da0eda      46522  fig/US20190348597A1-1.png  https://patents.google.com/patent/US20190348597A1/en
+8d65a9409449a6600ef31cc6dd75ddf7dc73894466af079f24c7969dc28f1c44      38543  text/US10135366B2.txt  https://patents.google.com/patent/US10135366B2/en
+a57111c29733ff2a7468e7ab2bbaff1102f477cd21de5c0d329a46dc5310506b      28874  text/US10144532B2.txt  https://patents.google.com/patent/US10144532B2/en
+97735e8a5581689378c7b1cb6977197293d76473fcea1e70710de6d5830d2de2      33314  text/US10322827B2.txt  https://patents.google.com/patent/US10322827B2/en
+6768aa6394cf23bcb437a0b47a79084b12fbeb612f06b894c458f571e74f1a88      28721  text/US20170025935A1.txt  https://patents.google.com/patent/US20170025935A1/en
+cdf49af2d3c546155c0b4a96367821b5eba130a0f642ea2e0e509acfc6032d6c      28792  text/US20170313446A1.txt  https://patents.google.com/patent/US20170313446A1/en
+0c1696a71f5d2e6faf366af10e5002f2cc39f7a838f686857d63593c7297cc82      33211  text/US20180229864A1.txt  https://patents.google.com/patent/US20180229864A1/en
+0ef588d22bf10db35d47a8f9741ae34f18c4b9d71a3d8d9541ef8d65c99bf27f      32852  text/US20190058105A1.txt  https://patents.google.com/patent/US20190058105A1/en
+a2d07a7df588abeb7de440a73f1ebbbb4607b5e436924f8882f745d97a235c4d      32643  text/US20190295733A1.txt  https://patents.google.com/patent/US20190295733A1/en
+e0343ed30f0b7aeea14e695bfc97524f071604a1e72da9388b3decec3e8ce0eb      33366  text/US20190348597A1.txt  https://patents.google.com/patent/US20190348597A1/en

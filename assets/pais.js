@@ -34,6 +34,7 @@
   function fint(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   function pad4(n) { return String(n).padStart(4, '0'); }
   function pdfHref(id) { return 'pais/pdf/' + id + '.pdf'; }
+  function txtHref(id) { return 'pais/text/' + id + '.txt'; }
   function figHref(id, i) { return 'pais/fig/' + id + '-' + i + '.png'; }
   function postHref(p) { return MODE === 'web' ? HOME + '#shot-' + p.n : HOME + '#post=' + p.id; }
   function plain(h) { return String(h).replace(/<br>/g, ' ').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'); }
@@ -52,8 +53,10 @@
     else if (aban) out.push(['Abandoned', fdate(aban.d)]);
     return out;
   }
-  var TOTAL = { figs: 0, pages: 0, words: 0, bytes: 0 };
-  DOCS.forEach(function (id) { var d = D[id]; TOTAL.figs += d.figs.length; TOTAL.pages += d.pdfPages || 0; TOTAL.words += d.words || 0; TOTAL.bytes += d.pdfBytes || 0; });
+  var PUBS = window.PAIS_PUBS || {}, RETRIEVED = window.PAIS_RETRIEVED || '';
+  var TOTAL = { figs: 0, pages: 0, words: 0, bytes: 0, pdfs: 0 };
+  DOCS.forEach(function (id) { var d = D[id]; TOTAL.figs += d.figs.length; TOTAL.pages += d.pdfPages || 0; TOTAL.words += d.words || 0; TOTAL.bytes += d.pdfBytes || 0; TOTAL.pdfs++; });
+  Object.keys(PUBS).forEach(function (k) { TOTAL.bytes += PUBS[k].pdfBytes || 0; TOTAL.pdfs++; });
 
   /* ════════════ hero: one blueprint sheet per patent, plotted in on change ════════════ */
   var hero = $('#hero'), hcv = $('#paisSheet'), stageEl = $('#stage');
@@ -375,21 +378,30 @@
   }
   function libraryHTML() {
     return '<section class="panel pp-section" id="library">' +
-      '<div class="panel-head"><h2><span class="ph-k">Patent backup library</span><span class="ph-sub">stored with this site · ' + DOCS.length + ' PDFs · ' + fbytes(TOTAL.bytes) + '</span></h2></div>' +
-      '<p class="lib-intro">Every document is kept here as published: the official PDF, each original drawing sheet and the full text, so all of it stays readable if Google Patents or the USPTO links ever change. The sixth entry is the follow-up “high temperature” superconductor application.</p>' +
+      '<div class="panel-head"><h2><span class="ph-k">Patent backup library</span><span class="ph-sub">stored with this site · ' + TOTAL.pdfs + ' PDFs · ' + fbytes(TOTAL.bytes) + '</span></h2></div>' +
+      '<p class="lib-intro">Every document in the family is kept here, so it all stays readable offline and if Google Patents, the USPTO or X ever go away: the official PDF, each original drawing sheet, the full text in this reader and a plain-text copy that opens in any editor. The three granted patents also keep the application as it was first published. The sixth entry is the follow-up “high temperature” superconductor application.' +
+        (RETRIEVED ? ' Copied from Google Patents on ' + fdate(RETRIEVED) + '; <code>pais/MANIFEST.txt</code> lists a checksum for every file.' : '') + '</p>' +
       '<ol class="lib">' + DOCS.map(function (id, k) {
         var m = meta(id), d = D[id];
         return '<li class="lib-row">' +
           '<span class="lib-n">' + (REC[id] ? '0' + (m.i + 1) : '+') + '</span>' +
           '<div class="lib-main"><b class="lib-no">' + esc(m.no) + '</b><span class="lib-t">' + esc(m.title) + '</span>' +
             '<span class="lib-m"><span class="pp-status ' + m.status + '">' + esc(m.statusText) + '</span>' +
-            keyDates(id).map(function (x) { return '<span>' + x[0] + ' ' + x[1] + '</span>'; }).join('') + '</span></div>' +
+            keyDates(id).map(function (x) { return '<span>' + x[0] + ' ' + x[1] + '</span>'; }).join('') + '</span>' +
+            (PUBS[id] ? pubLine(PUBS[id]) : '') + '</div>' +
           '<div class="lib-acts">' +
             '<button class="tool-btn pp-go" type="button" data-act="read" data-doc="' + id + '">Read</button>' +
             '<a class="tool-btn" href="' + pdfHref(id) + '" target="_blank" rel="noopener" title="Open the PDF">PDF · ' + d.pdfPages + ' pp · ' + fbytes(d.pdfBytes) + '</a>' +
             '<a class="tool-btn" href="' + pdfHref(id) + '" download="' + id + '.pdf" title="Download the PDF" aria-label="Download ' + esc(m.no) + ' PDF">↓</a>' +
+            '<a class="tool-btn" href="' + txtHref(id) + '" target="_blank" rel="noopener" title="Plain-text copy">Text</a>' +
           '</div></li>';
       }).join('') + '</ol></section>';
+  }
+  // the application as first published, before the grant
+  function pubLine(u) {
+    return '<span class="lib-pub"><span>Application as published</span><b>' + esc(u.no) + '</b><span>' + fdate(u.date) + '</span>' +
+      '<a href="' + pdfHref(u.id) + '" target="_blank" rel="noopener">PDF · ' + u.pdfPages + ' pp</a>' +
+      '<a href="' + txtHref(u.id) + '" target="_blank" rel="noopener">Text</a></span>';
   }
   function excerpt(s, n) { s = (s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
   function tmbHTML() {
@@ -427,7 +439,7 @@
         '<b>' + (REC[id] ? '0' + (m.i + 1) : '+') + '</b><span>' + esc(REC[id] ? m.viz.hand : 'High Temperature Superconductor') + '<small>' + esc(m.no) + '</small></span>' +
         '<i class="st ' + m.status + '" title="' + esc(m.statusText) + '"></i></a></li>';
     }).join('');
-    $('#sideNote').innerHTML = 'Backed up here: ' + DOCS.length + ' PDFs (' + fbytes(TOTAL.bytes) + '), ' + TOTAL.figs + ' original drawings and ' + fint(TOTAL.words) + ' words of full text. Search covers every abstract, description and claim.';
+    $('#sideNote').innerHTML = 'Backed up here, readable offline: ' + TOTAL.pdfs + ' PDFs (' + fbytes(TOTAL.bytes) + '), ' + TOTAL.figs + ' original drawings, ' + fint(TOTAL.words) + ' words of full text and a plain-text copy of every document. Search covers every abstract, description and claim.';
   }
   var vizzes = [], vRunning = false, vRaf = 0, vLast = 0, io = null;
   function buildOverview() {
@@ -509,6 +521,8 @@
     return '<div class="pp-acts rd-acts">' +
       '<a class="tool-btn" href="' + pdfHref(id) + '" target="_blank" rel="noopener">Open PDF backup · ' + D[id].pdfPages + ' pp</a>' +
       '<a class="tool-btn" href="' + pdfHref(id) + '" download="' + id + '.pdf">Download PDF ↓</a>' +
+      '<a class="tool-btn" href="' + txtHref(id) + '" target="_blank" rel="noopener">Plain-text copy</a>' +
+      (PUBS[id] ? '<a class="tool-btn" href="' + pdfHref(PUBS[id].id) + '" target="_blank" rel="noopener">As first published · ' + esc(PUBS[id].no) + '</a>' : '') +
       '<a class="tool-btn" href="' + GP + id + '/en" target="_blank" rel="noopener">Google Patents ↗</a></div>';
   }
   function rdBodyHTML(id, tab) {

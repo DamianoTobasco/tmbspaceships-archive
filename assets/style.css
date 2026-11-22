@@ -1204,3 +1204,6 @@ a.tool-btn:hover { text-decoration: none; }
   .reader .insp-tabs { padding: 0 8px; }
   .reader .insp-tabs button { padding: 12px 8px 10px; font-size: 9px; letter-spacing: .08em; }
 }
+.lib-pub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--line); font: 500 11px/1.5 var(--mono); color: var(--muted); }
+.lib-pub b { color: var(--text-2); font-weight: 500; }
+.lib-pub a { color: var(--ion); }
