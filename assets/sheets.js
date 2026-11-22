@@ -1303,7 +1303,13 @@
   /* ── exhibit switcher: the four sheets, then the fusion drive ───── */
   (function exhibits() {
     var chips = Array.prototype.slice.call(host.querySelectorAll('[data-exhibit-pick]'));
-    var order = ['pump', 'craft', 'bubble', 'mod', 'reactor'], cur = '', auto = !reduce;
+    var order = ['pump', 'craft', 'bubble', 'mod', 'reactor'], cur = '', auto = !reduce, viz3d = false;
+    // while the header shows a 3D model (hero3d.js), neither the sheet nor the fusion drive is drawn
+    function apply() {
+      var isSheet = cur !== 'reactor';
+      if (window.Reactor) window.Reactor.setActive(!isSheet && !viz3d);
+      if (isSheet && !viz3d) show(cur); else hide();
+    }
     function set(name, byUser) {
       if (order.indexOf(name) < 0) return;
       if (byUser) auto = false;
@@ -1311,10 +1317,10 @@
       cur = name;
       host.setAttribute('data-exhibit', name);
       chips.forEach(function (b) { b.setAttribute('aria-selected', b.getAttribute('data-exhibit-pick') === name ? 'true' : 'false'); });
-      var isSheet = name !== 'reactor';
-      if (window.Reactor) window.Reactor.setActive(!isSheet);
-      if (isSheet) show(name); else hide();
+      apply();
+      host.dispatchEvent(new CustomEvent('exhibit', { detail: name }));
     }
+    host.addEventListener('heroviz', function (e) { viz3d = e.detail === '3d'; if (viz3d) auto = false; if (cur) apply(); });
     chips.forEach(function (b) { b.addEventListener('click', function () { set(b.getAttribute('data-exhibit-pick'), true); }); });
     // until someone picks, step through the exhibits while the hero is on screen
     setInterval(function () {

@@ -145,7 +145,7 @@
     HS.raf = requestAnimationFrame(heroFrame);
   }
   function heroLoop() {
-    var want = !reduce && HS.inView && !document.hidden && !!HS.d;
+    var want = !reduce && HS.inView && !document.hidden && !!HS.d && !HS.viz3d;
     if (want && !HS.running) { HS.running = true; HS.last = 0; HS.raf = requestAnimationFrame(heroFrame); }
     else if (!want && HS.running) { HS.running = false; if (HS.raf) cancelAnimationFrame(HS.raf); HS.raf = 0; }
   }
@@ -169,6 +169,7 @@
     }
     HS.cur = i; HS.d = P[i].viz;
     hero.setAttribute('data-exhibit', P[i].key);
+    hero.dispatchEvent(new CustomEvent('exhibit', { detail: P[i].key }));
     $$('#exhibits button').forEach(function (b, k) { b.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
     var line = $('#heroLine');
     if (line) { line.innerHTML = heroLineHTML(P[i]); replay(line, 'swap'); }
@@ -200,6 +201,12 @@
     window.addEventListener('resize', resize);
     if ('ResizeObserver' in window) new ResizeObserver(resize).observe(stageEl);
     document.addEventListener('visibilitychange', heroLoop);
+    hero.addEventListener('heroviz', function (e) {   // the header switch (hero3d.js)
+      HS.viz3d = e.detail === '3d';
+      if (HS.viz3d) heroAuto = false;
+      else { HS.snap = null; HS.age = reduce ? 99 : 0; heroBuild(); heroRender(); }
+      heroLoop();
+    });
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (en) { HS.inView = en[0].isIntersecting; heroLoop(); }, { threshold: 0 }).observe(hero);
     }

@@ -10,7 +10,10 @@
  *   Pais3D.scenes.craft = { title, fig, cam, fit, glsl, parts, steps, levels, rest, cutModes }
  *
  *   window.Pais3D.ok                 WebGL is available
- *   window.Pais3D.create(host, key)  mounts the viewer in host; returns { start, stop, resize }
+ *   window.Pais3D.create(host, key, { compact })  mounts the viewer in host; returns { start, stop, resize, destroy }
+ *                                    compact: no parts list beside it (for the page header)
+ * Viewing: drag turns the model · pinch, Ctrl/⌘ + scroll, double-click or the + − buttons zoom toward that
+ *          spot · Shift-drag, right-drag or two fingers pan · clicking a part zooms in on it
  *   ?p3d=time,yaw,pitch,cutMode      freezes every model in that state (for checking a view)
  *
  * A scene's GLSL defines FAR and GLOWK and these functions:
@@ -35,7 +38,7 @@
   var HEAD = [
     'precision highp float;',
     'uniform vec2 uRes; uniform float uT; uniform vec3 uRo, uRi, uUp, uFw; uniform float uFl;',
-    'uniform float uCut; uniform vec4 uA; uniform vec4 uB; uniform vec4 uC;',
+    'uniform float uCut; uniform vec4 uA; uniform vec4 uB; uniform vec4 uC; uniform float uFar;',
     'const float PI=3.14159265; const float TAU=6.2831853;',
     'float hash1(vec3 p){ p=fract(p*0.3183099+0.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }',
     'float vnoise(vec3 x){ vec3 i=floor(x); vec3 f=fract(x); f=f*f*(3.0-2.0*f);',
@@ -97,7 +100,7 @@
     '    vec3 p=ro+rd*t; vec2 h=map(p); float cap=glowStep(p);',
     '    vol+=glow(p)*clamp(min(h.x,cap),0.006,0.12);',
     '    if(h.x<0.0007*t+0.0003){ m=h.y; break; }',
-    '    t+=min(h.x*0.92,cap); if(t>FAR) break;',
+    '    t+=min(h.x*0.92,cap); if(t>uFar) break;',
     '  }',
     '  vec3 col;',
     '  if(m>0.0){',
@@ -111,7 +114,7 @@
     '    float hl=pow(max(dot(normalize(L-rd),n),0.0), mix(180.0,14.0,rgh))*(1.0-rgh*0.6);',
     '    vec3 dcol=alb*(1.0-met)*(dif*sh*vec3(1.05,1.0,0.94)*1.5+ao*(vec3(0.07,0.09,0.16)+0.14*max(dot(n,vec3(-0.6,0.2,0.5)),0.0)+0.12*max(dot(n,vec3(0.1,-0.5,0.85)),0.0)));',
     '    col=dcol+ev*F*ao*(0.55+0.45*sh)+vec3(1.0)*hl*sh*F*1.6+emi+lit(p,alb,n);',
-    '    col=mix(col,bg(rd),smoothstep(FAR*0.75,FAR,t));',
+    '    col=mix(col,bg(rd),smoothstep(uFar*0.85,uFar,t));',
     '  } else col=bg(rd);',
     '  col+=vol*GLOWK;',
     '  col=(col*(2.51*col+0.03))/(col*(2.43*col+0.59)+0.14);',
@@ -141,31 +144,36 @@
     return p;
   }
 
-  function create(host, key) {
+  function create(host, key, opts) {
     var S = SCENES[key];
     if (!S || !host) return null;
+    var compact = !!(opts && opts.compact);
+    host.classList.toggle('p3d-compact', compact);
     var MODES = S.cutModes || CUT_MODES;
     var total = S.steps.reduce(function (a, s) { return a + s.d; }, 0);
     host.innerHTML =
       '<div class="p3d-stage">' +
-        '<canvas class="p3d-cv" role="img" aria-label="3D model of the ' + esc(S.title.toLowerCase()) + ', built from the patent’s description"></canvas>' +
+        '<canvas class="p3d-cv" role="img" aria-label="3D model of the ' + esc(S.title.toLowerCase()) + ', built from ' + esc(S.from || 'the patent’s description') + '"></canvas>' +
         '<div class="p3d-pins" aria-hidden="true">' + S.parts.map(function (p, i) { return '<button type="button" class="p3d-pin" data-part="' + i + '" tabindex="-1">' + esc(p.n) + '</button>'; }).join('') + '</div>' +
         '<div class="p3d-ctl">' +
           '<button type="button" class="p3d-btn" data-p3d="cut" aria-pressed="true" title="Switch the cutaway view">' + esc(MODES[0].label) + '</button>' +
           '<button type="button" class="p3d-btn" data-p3d="run" aria-pressed="true">Running</button>' +
           '<button type="button" class="p3d-btn" data-p3d="reset">Reset view</button>' +
+          '<span class="p3d-zoom"><button type="button" class="p3d-btn" data-p3d="zout" aria-label="Zoom out" title="Zoom out">−</button>' +
+          '<button type="button" class="p3d-btn" data-p3d="zin" aria-label="Zoom in" title="Zoom in">+</button></span>' +
         '</div>' +
         '<p class="p3d-load">Building the 3D model…</p>' +
         '<div class="p3d-steps"><div class="p3d-dots" role="tablist" aria-label="How it is claimed to work">' +
           S.steps.map(function (s, i) { return '<button type="button" role="tab" data-step="' + i + '" aria-selected="false"><b>' + (i + 1) + '</b><span>' + esc(s.label) + '</span><i></i></button>'; }).join('') +
         '</div><p class="p3d-cap" aria-live="polite"></p></div>' +
+        (compact ? '<p class="p3d-detail"></p>' : '') +
       '</div>' +
-      '<aside class="p3d-legend">' +
-        '<h4>Parts <small>numbered as in the patent</small></h4>' +
+      (compact ? '' : '<aside class="p3d-legend">' +
+        '<h4>Parts <small>' + esc(S.partsNote || 'numbered as in the patent') + '</small></h4>' +
         '<ol>' + S.parts.map(function (p, i) { return '<li><button type="button" data-part="' + i + '"><b>' + esc(p.n) + '</b><span>' + esc(p.name) + '</span></button></li>'; }).join('') + '</ol>' +
         '<p class="p3d-detail"></p>' +
-        '<p class="p3d-note">' + esc(S.fig) + '. Drag to turn it. Shown working as the patent claims; none of this has been demonstrated.</p>' +
-      '</aside>';
+        '<p class="p3d-note">' + esc(S.fig) + '. Drag to turn it; pinch, double-click or use + and − to zoom; click a part to zoom in on it. ' + esc(S.claim || 'Shown working as the patent claims; none of this has been demonstrated.') + '</p>' +
+      '</aside>');
     var stage = host.querySelector('.p3d-stage'), cv = host.querySelector('.p3d-cv');
     var pins = Array.prototype.slice.call(host.querySelectorAll('.p3d-pin'));
     var rows = Array.prototype.slice.call(host.querySelectorAll('.p3d-legend li button'));
@@ -175,6 +183,7 @@
     var gl = null, prog = null, U = {}, failed = false, PX = new Uint8Array(4);
     var q = (location.search.match(/[?&]p3d=([-\d.,]+)/) || [])[1], Q = q ? q.split(',').map(Number) : null;
     var st = { yaw: S.cam.yaw, pitch: S.cam.pitch, manual: false, mode: 0, cut: MODES[0].cut, cutCur: MODES[0].cut, qt: MODES[0].qt, qtCur: MODES[0].qt,
+               zoom: 1, zoomCur: 1, tgt: [0, 0, 0], tgtCur: [0, 0, 0],
                run: !reduce, time: reduce ? 0 : 0.2, phase: [0, 0, 0, 0], scale: 1, slow: 0, frames: 0, W: 0, H: 0, sel: -1, step: -1, running: false, raf: 0, last: 0, drawn: false };
     if (Q) {
       st.time = Q[0] || 0; st.frozen = true; st.manual = true;
@@ -193,7 +202,7 @@
         var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
         var loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-        ['uRes', 'uT', 'uRo', 'uRi', 'uUp', 'uFw', 'uFl', 'uCut', 'uA', 'uB', 'uC'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+        ['uRes', 'uT', 'uRo', 'uRi', 'uUp', 'uFw', 'uFl', 'uCut', 'uA', 'uB', 'uC', 'uFar'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
       } catch (e) {
         failed = true; gl = null;
         if (window.console) console.warn('Pais3D: ' + key + ' could not start', e);
@@ -218,12 +227,13 @@
       var yaw = st.manual ? st.yaw : (narrow && S.cam.yawNarrow || S.cam.yaw) + (reduce ? 0 : S.cam.sway * Math.sin(st.time * 0.22));
       var pitch = st.pitch;
       st.curYaw = yaw;
-      var D = FL * Math.max(S.fit.hh / 0.5, (narrow && S.fit.hwNarrow || S.fit.hw) / (0.5 * aspect));
-      var ro = [D * Math.sin(yaw) * Math.cos(pitch), D * Math.sin(pitch), D * Math.cos(yaw) * Math.cos(pitch)];
-      var l = Math.hypot(ro[0], ro[1], ro[2]), fw = [-ro[0] / l, -ro[1] / l, -ro[2] / l];
+      // a little air round the model at zoom 1; zooming moves the camera along its line of sight to the target
+      var D0 = 1.14 * FL * Math.max(S.fit.hh / 0.5, (narrow && S.fit.hwNarrow || S.fit.hw) / (0.5 * aspect)), D = D0 / st.zoomCur, T = st.tgtCur;
+      var dir = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
+      var ro = [T[0] + D * dir[0], T[1] + D * dir[1], T[2] + D * dir[2]], fw = [-dir[0], -dir[1], -dir[2]];
       var ri = [-fw[2], 0, fw[0]], rl = Math.hypot(ri[0], ri[2]) || 1; ri = [ri[0] / rl, 0, ri[2] / rl];   // cross(fw, +Y)
       var up = [ri[1] * fw[2] - ri[2] * fw[1], ri[2] * fw[0] - ri[0] * fw[2], ri[0] * fw[1] - ri[1] * fw[0]];
-      return { ro: ro, fw: fw, ri: ri, up: up };
+      return (st.cam = { ro: ro, fw: fw, ri: ri, up: up, D: D, D0: D0 });
     }
     function levels() { return st.run ? S.levels(st.time % total, total) : S.rest; }
     function stepAt() {
@@ -253,12 +263,15 @@
     function draw(dt) {
       if (!gl || !resize()) return;
       st.cutCur += (st.cut - st.cutCur) * Math.min(1, dt * 5); st.qtCur += (st.qt - st.qtCur) * Math.min(1, dt * 5);
+      var ez = Math.min(1, dt * 9);
+      st.zoomCur += (st.zoom - st.zoomCur) * ez;
+      for (var j = 0; j < 3; j++) st.tgtCur[j] += (st.tgt[j] - st.tgtCur[j]) * ez;
       var lv = levels(), C = camera(), B = lv.B || [0, 0, 0], rate = lv.rate || [0, 0, 0, 0], i;
       for (i = 0; i < 4; i++) st.phase[i] = st.frozen ? (rate[i] || 0) * st.time : st.phase[i] + (reduce ? 0 : (rate[i] || 0) * dt);
       gl.viewport(0, 0, cv.width, cv.height);
       gl.uniform2f(U.uRes, cv.width, cv.height); gl.uniform1f(U.uT, st.time);
       gl.uniform3fv(U.uRo, C.ro); gl.uniform3fv(U.uRi, C.ri); gl.uniform3fv(U.uUp, C.up); gl.uniform3fv(U.uFw, C.fw);
-      gl.uniform1f(U.uFl, FL); gl.uniform1f(U.uCut, st.cutCur);
+      gl.uniform1f(U.uFl, FL); gl.uniform1f(U.uCut, st.cutCur); gl.uniform1f(U.uFar, C.D + S.fit.hw * 1.3 + 3.5);
       gl.uniform4fv(U.uA, lv.A); gl.uniform4f(U.uB, B[0] || 0, B[1] || 0, B[2] || 0, st.qtCur); gl.uniform4fv(U.uC, st.phase);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       hud(C);
@@ -281,7 +294,8 @@
         if (ms > 19 && st.scale > 0.4) { if (++st.slow >= 2) { st.scale = Math.max(0.4, st.scale * Math.sqrt(13 / ms)); st.slow = 0; } }   // two slow readings in a row, so one hiccup changes nothing
         else { st.slow = 0; if (ms < 9 && st.scale < 1) st.scale = Math.min(1, st.scale * 1.2); }
       }
-      if (reduce && st.drawn && Math.abs(st.cut - st.cutCur) + Math.abs(st.qt - st.qtCur) < 0.004 && !st.dirty) { st.running = false; return; }
+      if (reduce && st.drawn && Math.abs(st.cut - st.cutCur) + Math.abs(st.qt - st.qtCur) + Math.abs(st.zoom - st.zoomCur) +
+          Math.abs(st.tgt[0] - st.tgtCur[0]) + Math.abs(st.tgt[1] - st.tgtCur[1]) + Math.abs(st.tgt[2] - st.tgtCur[2]) < 0.004 && !st.dirty) { st.running = false; return; }
       st.dirty = false;
       st.raf = requestAnimationFrame(frame);
     }
@@ -291,6 +305,36 @@
     }
     function stop() { st.running = false; if (st.raf) cancelAnimationFrame(st.raf); st.raf = 0; }
     function poke() { st.dirty = true; if (reduce && !st.running && gl) start(); }
+
+    /* ── zoom and pan ── */
+    function hold() { if (!st.manual) { st.manual = true; st.yaw = st.curYaw == null ? st.yaw : st.curYaw; } }   // stop the idle sway where it is
+    function limit() {
+      var mx = S.fit.hw * 1.1, my = S.fit.hh * 1.1;
+      st.tgt[0] = clamp(st.tgt[0], -mx, mx); st.tgt[1] = clamp(st.tgt[1], -my, my); st.tgt[2] = clamp(st.tgt[2], -mx, mx);
+    }
+    // zoom by factor f; px, py (stage pixels from the centre) is the spot that should stay under the cursor
+    function zoomBy(f, px, py) {
+      var z0 = st.zoom, z1 = clamp(z0 * f, 0.45, 7), C = st.cam;
+      f = z1 / z0;
+      if (f === 1) return;
+      hold();
+      if (px != null && C && st.H) {
+        var k = C.D0 / z0 / (FL * st.H) * (1 - 1 / f);
+        for (var i = 0; i < 3; i++) st.tgt[i] += (C.ri[i] * px - C.up[i] * py) * k;
+        limit();
+      }
+      st.zoom = z1; poke();
+    }
+    function panBy(dx, dy) {
+      var C = st.cam;
+      if (!C || !st.H) return;
+      hold();
+      var k = C.D / (FL * st.H);
+      for (var i = 0; i < 3; i++) st.tgt[i] += (-C.ri[i] * dx + C.up[i] * dy) * k;
+      limit(); poke();
+    }
+    function focus(p) { hold(); st.tgt = p.at.slice(); st.zoom = Math.max(st.zoom, p.zoom || 1.9); poke(); }
+    function home() { st.zoom = 1; st.tgt = [0, 0, 0]; }
 
     function setCut(i) {
       var m = MODES[i];
@@ -308,6 +352,7 @@
         var need = function (m) { return m.cut && (p.cut !== 'full' || !m.qt); };
         if (!need(MODES[st.mode])) for (var k = 0; k < MODES.length; k++) if (need(MODES[k])) { setCut(k); break; }
       }
+      if (p) focus(p);   // and bring it close
     }
     host.addEventListener('click', function (e) {
       var t = e.target.closest ? e.target : null;
@@ -325,30 +370,66 @@
         var act = b.getAttribute('data-p3d');
         if (act === 'cut') setCut((st.mode + 1) % MODES.length);
         else if (act === 'run') { st.run = !st.run && !reduce; b.setAttribute('aria-pressed', st.run ? 'true' : 'false'); st.step = -2; poke(); }
-        else if (act === 'reset') { st.yaw = S.cam.yaw; st.pitch = S.cam.pitch; st.manual = false; setCut(0); }
+        else if (act === 'reset') { st.yaw = S.cam.yaw; st.pitch = S.cam.pitch; st.manual = false; home(); if (st.sel >= 0) select(st.sel); setCut(0); }
+        else if (act === 'zin') zoomBy(1.4);
+        else if (act === 'zout') zoomBy(1 / 1.4);
       }
     });
-    // drag to turn: on touch only sideways movement turns it, so the page still scrolls
-    var drag = null;
+    // one pointer turns the model (Shift or the right button pans it); two fingers pinch to zoom and pan.
+    // On touch only sideways movement turns it, so a vertical swipe still scrolls the page.
+    var ptr = {}, drag = null, pinch = null;
+    function local(e) { var r = stage.getBoundingClientRect(); return [e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2]; }
+    function two() { var k = Object.keys(ptr); return k.length === 2 ? [ptr[k[0]], ptr[k[1]]] : null; }
     stage.addEventListener('pointerdown', function (e) {
       if (e.target.closest('button')) return;
-      drag = { x: e.clientX, y: e.clientY, yaw: st.curYaw == null ? st.yaw : st.curYaw, pitch: st.pitch, touch: e.pointerType === 'touch' };
-      st.yaw = drag.yaw; st.manual = true;
+      ptr[e.pointerId] = local(e);
       try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      var t = two();
+      if (t) { drag = null; pinch = { d: Math.hypot(t[0][0] - t[1][0], t[0][1] - t[1][1]) || 1, m: [(t[0][0] + t[1][0]) / 2, (t[0][1] + t[1][1]) / 2] }; return; }
+      hold();
+      drag = { x: e.clientX, y: e.clientY, yaw: st.yaw, pitch: st.pitch, touch: e.pointerType === 'touch', pan: e.shiftKey || e.button === 2 || e.button === 1 };
       stage.classList.add('grab');
     });
     stage.addEventListener('pointermove', function (e) {
+      if (!ptr[e.pointerId]) return;
+      ptr[e.pointerId] = local(e);
+      var t = two();
+      if (t && pinch) {
+        var d = Math.hypot(t[0][0] - t[1][0], t[0][1] - t[1][1]) || 1, m = [(t[0][0] + t[1][0]) / 2, (t[0][1] + t[1][1]) / 2];
+        panBy(m[0] - pinch.m[0], m[1] - pinch.m[1]);
+        zoomBy(d / pinch.d, m[0], m[1]);
+        pinch = { d: d, m: m };
+        return;
+      }
       if (!drag) return;
+      if (drag.pan) { panBy(e.clientX - drag.x, e.clientY - drag.y); drag.x = e.clientX; drag.y = e.clientY; return; }
       st.yaw = drag.yaw - (e.clientX - drag.x) * 0.008;
       if (!drag.touch) st.pitch = clamp(drag.pitch + (e.clientY - drag.y) * 0.006, -1.2, 1.3);
       poke();
     });
-    function drop() { drag = null; stage.classList.remove('grab'); }
+    function drop(e) { delete ptr[e.pointerId]; pinch = null; drag = null; stage.classList.remove('grab'); }
     stage.addEventListener('pointerup', drop); stage.addEventListener('pointercancel', drop);
+    stage.addEventListener('contextmenu', function (e) { if (!e.target.closest('button')) e.preventDefault(); });   // the right button pans
+    stage.addEventListener('wheel', function (e) {   // Ctrl/⌘ + scroll, which is also what a trackpad pinch sends; a plain scroll still moves the page
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      var p = local(e);
+      zoomBy(Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.012)), p[0], p[1]);
+    }, { passive: false });
+    stage.addEventListener('dblclick', function (e) {
+      if (e.target.closest('button')) return;
+      var p = local(e);
+      zoomBy(e.shiftKey ? 1 / 1.8 : 1.8, p[0], p[1]);
+    });
+    function destroy() {
+      stop();
+      try { var ex = gl && gl.getExtension('WEBGL_lose_context'); if (ex) ex.loseContext(); } catch (err) { /* ignore */ }
+      gl = null; prog = null; host.innerHTML = ''; host.classList.remove('ready', 'p3d-compact');
+    }
     cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); stop(); gl = null; prog = null; });
     cv.addEventListener('webglcontextrestored', function () { st.drawn = false; start(); });
 
-    return { start: start, stop: stop, resize: function () { poke(); }, failed: function () { return failed; } };
+    return { start: start, stop: stop, resize: function () { poke(); }, failed: function () { return failed; }, destroy: destroy };
   }
 
   // for checking a scene is not too heavy on this machine: ms to build its shader, and ms per frame
@@ -369,6 +450,7 @@
     gl.viewport(0, 0, w, h); gl.uniform2f(u('uRes'), w, h); gl.uniform1f(u('uT'), 3.3); gl.uniform1f(u('uFl'), 1.7); gl.uniform1f(u('uCut'), m.cut);
     gl.uniform3fv(u('uRo'), ro); gl.uniform3fv(u('uRi'), ri); gl.uniform3fv(u('uUp'), up); gl.uniform3fv(u('uFw'), fw);
     gl.uniform4fv(u('uA'), S.rest.A); gl.uniform4f(u('uB'), S.rest.B[0], S.rest.B[1], S.rest.B[2], m.qt); gl.uniform4f(u('uC'), 1, 1, 0, 0);
+    gl.uniform1f(u('uFar'), D + S.fit.hw * 1.3 + 3.5);
     gl.drawArrays(gl.TRIANGLES, 0, 3); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
     var build = Math.round(performance.now() - t0), t1 = performance.now();
     for (var i = 0; i < 6; i++) { gl.drawArrays(gl.TRIANGLES, 0, 3); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
